@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="168dp"
+            android:layout_height="44dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="60dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/text_view_style"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/company_no"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/kitchen_settings_company_no"
+            android:layout_width="220dp"
+            android:layout_height="44dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="13dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@id/textView2"
+            android:fontFamily="serif"
+            android:nextFocusDown="@id/kitchen_settings_company_year"
+            android:padding="10dp"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="168dp"
+            android:layout_height="44dp"
+            android:layout_below="@+id/textView2"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="60dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/text_view_style"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/company_year"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/kitchen_settings_company_year"
+            android:layout_width="220dp"
+            android:layout_height="44dp"
+            android:layout_below="@id/textView2"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@id/textView4"
+            android:fontFamily="serif"
+            android:nextFocusDown="@id/kitchen_settings_pos_no"
+            android:padding="10dp"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="168dp"
+            android:layout_height="44dp"
+            android:layout_below="@+id/textView4"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="60dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/text_view_style"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/pos_no"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/kitchen_settings_pos_no"
+            android:layout_width="220dp"
+            android:layout_height="44dp"
+            android:layout_below="@id/kitchen_settings_company_year"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@id/textView6"
+            android:fontFamily="serif"
+            android:nextFocusDown="@id/kitchen_settings_screen_no"
+            android:padding="10dp"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="168dp"
+            android:layout_height="44dp"
+            android:layout_below="@+id/textView6"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="60dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/text_view_style"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/Screen_no"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/kitchen_settings_screen_no"
+            android:layout_width="220dp"
+            android:layout_height="44dp"
+            android:layout_below="@id/kitchen_settings_pos_no"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@id/textView8"
+            android:fontFamily="serif"
+            android:imeOptions="actionGo"
+            android:padding="10dp"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/textView9"
+            android:layout_width="168dp"
+            android:layout_height="44dp"
+            android:layout_below="@+id/textView8"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="60dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/text_view_style"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/timer_duration"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/kitchen_settings_timer"
+            android:layout_width="220dp"
+            android:layout_height="44dp"
+            android:layout_below="@+id/kitchen_settings_screen_no"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@id/textView8"
+            android:fontFamily="serif"
+            android:imeOptions="actionGo"
+            android:padding="10dp"
+            android:singleLine="true"
+            android:text="30" />
+
+        <Button
+            android:id="@+id/kitchen_settings_save"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textView9"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="20dp"
+            android:background="@color/colorPrimaryLight"
+            android:drawableLeft="@drawable/ic_save_black_24dp"
+            android:fontFamily="serif"
+            android:padding="10dp"
+            android:text="Save"
+            android:textAllCaps="false"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/kitchen_settings_clean_kitchen"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/kitchen_settings_timer"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="30dp"
+            android:layout_toRightOf="@id/kitchen_settings_save"
+            android:background="@color/exit"
+            android:drawableLeft="@drawable/ic_delete_black_24dp"
+            android:fontFamily="serif"
+            android:padding="10dp"
+            android:text="Clean Kitchen"
+            android:textAllCaps="false"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/kitchen_settings_cancel"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/kitchen_settings_timer"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginRight="10dp"
+            android:layout_toRightOf="@id/kitchen_settings_clean_kitchen"
+            android:background="@color/floor"
+            android:drawableLeft="@drawable/ic_cancel_black_24dp"
+            android:fontFamily="serif"
+            android:padding="10dp"
+            android:text="Cancel"
+            android:textAllCaps="false"
+            android:textSize="20sp" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

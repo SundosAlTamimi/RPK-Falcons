@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/layer2"
+    tools:context=".MainActivity">
+
+    <GridView
+        android:id="@+id/gridView_dnd_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:horizontalSpacing="25dp"
+        android:numColumns="3"
+        android:paddingLeft="25dp"
+        android:paddingTop="25dp"
+        android:paddingRight="50dp"
+        android:paddingBottom="25dp"
+        android:scrollbars="vertical"
+        android:verticalSpacing="25dp" />
+
+    <ImageButton
+        android:id="@+id/orders_list_delete_button"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/delete_button_style"
+        android:padding="20dp"
+        android:src="@drawable/ic_delete_white_48dp" />
+
+    <ImageButton
+        android:id="@+id/orders_list_settings_button"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="5dp"
+        android:background="@drawable/ic_settings_black_24dp" />
+
+    <TextView
+        android:id="@+id/main_state_checker"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="0"
+        />
+
+    <TextView
+        android:id="@+id/main_network_follower"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_below="@id/main_state_checker"
+        android:text="0"
+        />
+
+</RelativeLayout>

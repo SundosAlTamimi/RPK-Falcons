@@ -1,0 +1,652 @@
+
+date must be sent from socket ==> it was no date
+
+//////////////////////////////////////
+package com.example.restposkitchen;
+
+import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.RequiresApi;
+import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.DragEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.TranslateAnimation;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageButton;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.restposkitchen.model.KitchenSettingsModel;
+import com.example.restposkitchen.model.Orders;
+import com.example.restposkitchen.presenter.KitchenJSONPresenter;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static com.example.restposkitchen.presenter.KitchenJSONPresenter.ordersList;
+
+public class MainActivity extends AppCompatActivity implements View.OnDragListener, View.OnClickListener {//implements View.OnTouchListener {
+
+    private BroadcastReceiver MyReceiver = null;
+    public static TextView networkStateFollower; // check network and network state
+    public static String internetState;
+    final Handler handler = new Handler();
+
+    public static ArrayList<List<Orders>> filteredOrders = new ArrayList<>();
+    private List<String> socketOrders = new ArrayList<>();
+    public static List<Orders> socketOrderList = new ArrayList<>();
+    public static List<String> orderNo = new ArrayList<>();
+    public static List<String> deletedOrders = new ArrayList<>();
+
+    private DatabaseHandler databaseHandler;
+    private KitchenJSONPresenter presenter;
+    private GridView dndGridView;
+    private OrdersAdapter adapter;
+    private ImageButton deleteButton, settingsButton;
+    public static TextView textChecker; // 0 is the default value, when cloud finished his work the value will change to 1
+    private String domain;
+    private int position = 0;
+    private boolean end = false;
+    boolean isFound = false; // used for compare cloud and socket values
+
+    private Dialog dialog;
+    private EditText companyNo, companyYear, posNo, screenNo;
+    private Button saveSettings, cancelSettings;
+
+    @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        initializationAtStart();
+        databaseHandler.getkitchenSettings();
+        startServerSocket();
+
+        if (!TextUtils.isEmpty(KitchenSettingsModel.COMPANY_NO) && !TextUtils.isEmpty(KitchenSettingsModel.COMPANY_YEAR)
+                && !TextUtils.isEmpty(KitchenSettingsModel.POS_NO) && !TextUtils.isEmpty(KitchenSettingsModel.SCREEN_NO)) {
+            Log.e("oncreate:filled", "true");
+            KitchenSettingsModel.FILLED = true;
+            companyNo.setText(KitchenSettingsModel.COMPANY_NO);
+            companyNo.setSelection(companyNo.getText().length());// change writing indicator position
+            companyYear.setText(KitchenSettingsModel.COMPANY_YEAR);
+            posNo.setText(KitchenSettingsModel.POS_NO);
+            screenNo.setText(KitchenSettingsModel.SCREEN_NO);
+
+            // /*/
+//            ordersList.clear();
+//            filteredOrders.clear();
+//            orderNo.clear();
+
+//            NetworkUtil networkUtil = new NetworkUtil();
+//            networkUtil.getConnectivityStatusString(this);
+
+//            if (NetworkUtil.status.toString().equals("1")) {
+//            presenter.sendKitchenRequest();
+//            } else {
+//                startServerSocket();
+//            }
+
+        } else {
+            KitchenSettingsModel.FILLED = false;
+            Toast.makeText(this, "Please check settings first!", Toast.LENGTH_SHORT).show();
+        }
+
+        // /*/
+//        networkStateFollower.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//                MainActivity.this.runOnUiThread(new Runnable() {
+//                    public void run() {
+//                        try {
+//                            Log.e("watching ", "" + networkStateFollower.getText().toString().equals("1"));
+//                            if (networkStateFollower.getText().toString().equals("0")) { // no network and no internet
+//                                Log.e("text ", "no network and no internet");
+//                                Toast.makeText(MainActivity.this, "Outside the network! ", Toast.LENGTH_SHORT).show();
+//                            } else if (networkStateFollower.getText().toString().equals("1")) { // network is exist
+//                                Toast.makeText(MainActivity.this, "No Internet Connection!", Toast.LENGTH_SHORT).show();
+//                                Log.e("text ", "network is exist");
+//                                hasInternetAccess(MainActivity.this);
+//                            } else if (networkStateFollower.getText().toString().equals("2")) { // network and internet are exist
+//                                Toast.makeText(MainActivity.this, "Internet is connected", Toast.LENGTH_SHORT).show();
+//                                Log.e("text ", "network and internet are exist ");
+//                                ordersList.clear();
+//                                filteredOrders.clear();
+//                                orderNo.clear();
+//                                presenter.sendKitchenRequest();
+//                            } else { // network is exist but no internet
+//                                Log.e("text ", "network is exist but no internet");
+//                                startServerSocket();
+//                                Toast.makeText(MainActivity.this, "Starting offline network! ", Toast.LENGTH_SHORT).show();
+//                            }
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                });
+//
+////                thread = new Thread(new Runnable() {
+////                    @Override
+////                    public void run() {
+////                        try {
+////                            Log.e("watching ", "" + networkStateFollower.getText().toString().equals("1"));
+////                            if (networkStateFollower.getText().toString().equals("0")) { // no network and no internet
+////                                Log.e("text ", "no network and no internet");
+////                                Toast.makeText(MainActivity.this, "Outside the network! ", Toast.LENGTH_SHORT).show();
+////                            } else if (networkStateFollower.getText().toString().equals("1")) { // network is exist
+////                                Toast.makeText(MainActivity.this, "No Internet Connection!", Toast.LENGTH_SHORT).show();
+////                                Log.e("text ", "network is exist");
+////                                hasInternetAccess(MainActivity.this);
+////                            } else if (networkStateFollower.getText().toString().equals("2")) { // network and internet are exist
+////                                Log.e("text ", "network and internet are exist ");
+//////                                ordersList.clear();
+//////                                filteredOrders.clear();
+//////                                orderNo.clear();
+////                                presenter.sendKitchenRequest();
+////                            } else { // network is exist but no internet
+////                                Log.e("text ", "network is exist but no internet");
+////                                startServerSocket();
+////                                Toast.makeText(MainActivity.this, "Starting offline network! ", Toast.LENGTH_SHORT).show();
+////                            }
+////                        } catch (Exception e) {
+////                            e.printStackTrace();
+////                        }
+////                    }
+////                });
+////                thread.start();
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//
+//            }
+//        });
+
+        textChecker.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (textChecker.getText().toString().equals("1")) {
+                    Log.e("text changed ", "1");
+                    adapter = new OrdersAdapter(MainActivity.this, filterOrdersByTableNo(ordersList), MainActivity.this);
+                    dndGridView.setAdapter(adapter);
+                    Log.e("text changed ", "0");
+                    textChecker.setText("0");
+                } else if (textChecker.getText().toString().equals("2")) {
+                    Log.e("text changed ", "2");
+//                    Log.e("socket order size: ", "" + socketOrderList.size());
+                    List<Orders> allSocketOrders = databaseHandler.getOrdersFromSocket();
+                    adapter = new OrdersAdapter(MainActivity.this, filterOrdersByTableNo(allSocketOrders), MainActivity.this);
+                    dndGridView.setAdapter(adapter);
+
+                } else if (textChecker.getText().toString().equals("3")) {
+                    Log.e("text changed ", "3");
+//                    Log.e("socket order size: ", "" + socketOrderList.size());
+                    List<Orders> allSocketOrders = databaseHandler.getOrdersFromSocket();
+//                    ArrayList<List<Orders>> filteredOrdersMain = filterOrdersByTableNo(allSocketOrders);
+                    adapter = new OrdersAdapter(MainActivity.this, filterOrdersByTableNo(allSocketOrders), MainActivity.this);
+                    dndGridView.setAdapter(adapter);
+
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        Timer _Request_Trip_Timer = new Timer();
+        _Request_Trip_Timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                presenter.sendKitchenRequest();
+            }
+        }, 0, 30000);// First time start after 0 milli second and repeated after 30 second
+
+
+    }
+
+    void initializationAtStart() {
+//        MyReceiver = new MyReceiver();
+        databaseHandler = new DatabaseHandler(this);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        presenter = new KitchenJSONPresenter(this, MainActivity.this);
+
+        dialog = new Dialog(MainActivity.this);
+        dialog.setContentView(R.layout.fragment_kitchen_settings);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setTitle("Settings");
+        companyNo = dialog.findViewById(R.id.kitchen_settings_company_no);
+        companyYear = dialog.findViewById(R.id.kitchen_settings_company_year);
+        posNo = dialog.findViewById(R.id.kitchen_settings_pos_no);
+        screenNo = dialog.findViewById(R.id.kitchen_settings_screen_no);
+        saveSettings = dialog.findViewById(R.id.kitchen_settings_save);
+        cancelSettings = dialog.findViewById(R.id.kitchen_settings_cancel);
+
+        textChecker = findViewById(R.id.main_state_checker);
+        networkStateFollower = findViewById(R.id.main_network_follower);
+        settingsButton = findViewById(R.id.orders_list_settings_button);
+        settingsButton.setOnClickListener(this);
+
+        dndGridView = findViewById(R.id.gridView_dnd_container);
+        dndGridView.setNumColumns(3);
+        dndGridView.setVerticalScrollBarEnabled(false);
+//        presenter = new KitchenJSONPresenter(this);
+
+        deleteButton = findViewById(R.id.orders_list_delete_button);
+        deleteButton.setVisibility(View.INVISIBLE);
+        deleteButton.setOnDragListener(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        int pid = android.os.Process.myPid();
+        android.os.Process.killProcess(pid);
+    }
+
+    void showData() {
+//        List<Orders> orders = databaseHandler.getOrders();
+//        Log.e("size is ", "" + orders.size());
+        List<Orders> ordersSocket = databaseHandler.getOrdersFromSocket();
+        Log.e("size is ", "" + ordersSocket.size());
+//        Log.e("ITEMNAME ", "" + orders.get(0).getItemName());
+//        Log.e("Done ", "" + orders.get(0).getDone());
+//        Log.e("KitchenNumber ", "" + orders.get(0).getKitchenNumber());
+
+    }
+
+    ArrayList<List<Orders>> filterOrdersByTableNo(List<Orders> list) {
+//        Log.e("orders List size", "" + list.size());
+        if (list.size() != 0) {//KitchenJSONPresenter.ordersList.size() != 0) {
+            // Method for filtering orders Numbers
+//            orderNo.add(list.get(0).getOrderNumber());//KitchenJSONPresenter.ordersList.get(0).getOrderNumber());
+            for (int i = 0; i < list.size(); i++) { //KitchenJSONPresenter.ordersList.size()
+                if (!orderNo.contains(list.get(i).getOrderNumber())) {//KitchenJSONPresenter.ordersList.get(i).getOrderNumber())) {
+                    orderNo.add(list.get(i).getOrderNumber());//KitchenJSONPresenter.ordersList.get(i).getOrderNumber());
+                }
+            }
+
+            // Method to get all orders for specific table
+            for (int j = 0; j < orderNo.size(); j++) {
+                List<Orders> ordersForOneTable = new ArrayList<>();
+                for (int k = 0; k < list.size(); k++) { //KitchenJSONPresenter.ordersList.size()
+//                    Log.e("without name", "" + KitchenJSONPresenter.ordersList.get(k).getOrderNumber());
+                    if (orderNo.get(j).equals(list.get(k).getOrderNumber())) {//KitchenJSONPresenter.ordersList.get(k).getOrderNumber()
+                        ordersForOneTable.add(list.get(k));//KitchenJSONPresenter.ordersList.get(k)
+                    }
+                }
+                filteredOrders.add(ordersForOneTable);
+            }
+        }
+        Log.e("main:filtered: ", "" + filteredOrders.size());
+        return filteredOrders;
+    }
+
+    public void showDeleteOrderButton(ArrayList<List<Orders>> filteredOrders, int position) {
+        this.filteredOrders = filteredOrders;
+        this.position = position;
+        deleteButton.setVisibility(View.VISIBLE);
+        TranslateAnimation animate = new TranslateAnimation(
+                0,
+                0,
+                0,
+                10);
+        animate.setDuration(100);
+        animate.setFillAfter(true);
+        deleteButton.startAnimation(animate);
+    }
+
+    public void hideDeleteOrders() {
+        TranslateAnimation animate = new TranslateAnimation(
+                0,
+                0,
+                10,
+                0);
+        animate.setDuration(100);
+//      animate.setFillAfter(true);
+        deleteButton.startAnimation(animate);
+        deleteButton.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public boolean onDrag(View v, DragEvent event) {
+
+        if (event.getAction() == DragEvent.ACTION_DRAG_ENTERED)
+            deleteButton.setBackgroundResource(R.color.exit);
+
+        if (event.getAction() == DragEvent.ACTION_DRAG_ENDED)
+            hideDeleteOrders();
+
+        if (event.getAction() == DragEvent.ACTION_DRAG_EXITED) {
+            deleteButton.setBackgroundResource(R.drawable.delete_button_style);
+            hideDeleteOrders();
+        }
+
+        if (event.getAction() == DragEvent.ACTION_DROP) {
+
+//            deleteButton.setBackgroundResource(R.color.exit);
+            domain = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
+                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(position).get(0).getOrderNumber();
+
+            String deleteDomain = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
+                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=";
+
+            if (textChecker.getText().toString().equals("1")) { // delete socket orders when cloud is running
+//                databaseHandler.deleteFromOrders(filteredOrders.get(position).get(0).getOrderNumber());
+                if (deletedOrders.size() != 0) {
+                    for (int k = 0; k < deletedOrders.size(); k++)
+                        presenter.updateOrdersRequest(deleteDomain + deletedOrders.get(k));
+                }
+
+                if (socketOrders.contains(filteredOrders.get(position).get(0).getOrderNumber())) {
+                    socketOrders.remove(filteredOrders.get(position).get(0).getOrderNumber());
+                }
+
+                List<Orders> getSocketData = databaseHandler.getOrdersFromSocket();
+                for (int i = 0; i < getSocketData.size(); i++) {
+                    if (getSocketData.get(i).getOrderNumber() == filteredOrders.get(position).get(0).getOrderNumber()) {
+                        databaseHandler.deleteFromSocketOrders(filteredOrders.get(position).get(0).getOrderNumber());
+                        i = getSocketData.size();
+                    }
+                }
+
+            }
+
+            if (textChecker.getText().toString().equals("2") | textChecker.getText().toString().equals("3")) { // delete cloud orders when socket is running
+                databaseHandler.deleteFromSocketOrders(filteredOrders.get(position).get(0).getOrderNumber());
+                Log.e("from delete", "" + filteredOrders.get(position).get(0).getOrderNumber());
+                deletedOrders.add(filteredOrders.get(position).get(0).getOrderNumber());
+            }
+
+            presenter.updateOrdersRequest(domain);
+            for (int i = 0; i < ordersList.size(); i++) {
+                if (ordersList.get(i).getOrderNumber() == filteredOrders.get(position).get(0).getOrderNumber()) {
+                    ordersList.remove(i);
+                }
+            }
+
+            for (int i = 0; i < socketOrderList.size(); i++) {
+                if (socketOrderList.get(i).getOrderNumber() == filteredOrders.get(position).get(0).getOrderNumber()) {
+                    socketOrderList.remove(i);
+                }
+            }
+            filteredOrders.remove(filteredOrders.get(position));
+            hideDeleteOrders();
+            adapter.notifyDataSetChanged();
+            Toast.makeText(this, "item deleted", Toast.LENGTH_SHORT).show();
+            Log.e("item ", " deleted");
+
+        }
+        return true;
+    }
+
+    public boolean hasInternetAccess(Context context) {
+//        Log.e("status: ", "" + com.example.androidtutorialproject.internet.MyReceiver.status.equals("Wifi enabled"));
+        Log.e("networkStateFollower 1", "" + networkStateFollower.getText().toString().equals("1"));
+        Log.e("status value", "" + com.example.restposkitchen.internet.MyReceiver.status);
+        Log.e("verify value", "" + com.example.restposkitchen.internet.MyReceiver.status.equals("1"));
+
+        presenter.checkInternetConnection();
+        if (internetState.toString().equals("200")) {
+            networkStateFollower.setText("2");
+            Log.e("networkStateFollower", "" + networkStateFollower.getText());
+
+        } else {
+            networkStateFollower.setText("3");
+            Log.e("networkStateFollower", "" + networkStateFollower.getText());
+
+        }
+//            try {
+//                Log.e("tetsting 1 " , " inside method");
+//                HttpURLConnection urlc = (HttpURLConnection) (new URL("http://www.google.com/").openConnection()); //http://clients3.google.com/generate_204
+//                urlc.setRequestProperty("User-Agent", "Android");
+//                urlc.setRequestProperty("Connection", "close");
+//                urlc.setConnectTimeout(1500);
+//                urlc.connect();
+//                if (urlc.getResponseCode() == 200 && urlc.getContentLength() != 0){
+//                    Log.e("tetsting 6" , " inside method");
+//                    networkStateFollower.setText("2");
+//                    return (urlc.getResponseCode() == 200 && urlc.getContentLength() == 0);
+//                }
+//
+//                networkStateFollower.setText("2");
+//                Log.e("networkStateFollower", "" + networkStateFollower.getText().toString());
+//                return false;//(urlc.getResponseCode() == 200 && urlc.getContentLength() == 0);
+//            } catch (IOException e) {
+//                networkStateFollower.setText("3");
+//                Log.e("Error checking internet", "" + e);
+//            }
+//        } else {
+//            Log.e("internet: ", "No Network available!");}
+
+        return false;
+    }
+
+    public void startServerSocket() {
+
+        Thread thread = new Thread(new Runnable() {
+            private String stringData = null;
+
+            //            private JSONObject jsonObject = new JSONObject();
+            @Override
+            public void run() {
+                try {
+                    ServerSocket serverSocket = new ServerSocket(9002);
+//                    while (!end) {
+                    //Server is waiting for client here, if needed
+                    Socket s = serverSocket.accept();
+                    BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                    PrintWriter output = new PrintWriter(s.getOutputStream());
+
+                    stringData = input.readLine();
+                    if (stringData != null) {
+                        Log.e("socket ", "is worked");
+                        output.println(stringData);
+                        output.flush();
+                        filterSocketAndServerOrders(stringData);
+                    }
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+//                        updateUI(stringData);
+//                        if (stringData.equalsIgnoreCase("STOP")) {
+//                            end = true;
+//                            output.close();
+//                            s.close();
+//                            break;
+//                        }
+
+                    output.close();
+                    s.close();
+//                    }
+                    serverSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+        thread.start();
+    }
+
+    void filterSocketAndServerOrders(final String socketOrder) { //final Orders socketOrder
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.e("socketOrder ", socketOrder);
+                socketOrders.add(socketOrder);
+//                ordersList = databaseHandler.getOrders(); // orderlist from kitchen presenter
+//                int size = ordersList.size();
+//                Log.e("ordersList before", "" + ordersList.size());
+                Log.e("socket size", "" + socketOrders.size());
+                for (int k = 0; k < socketOrders.size(); k++) {
+                    try {
+                        JSONArray jsonArray = new JSONArray(socketOrders.get(k));
+                        Log.e("array length", "" + jsonArray.length());
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject object = jsonArray.getJSONObject(i);
+
+                            Orders orders = new Orders("no date"
+                                    , object.getString("ORDERNO")
+                                    , Integer.parseInt(object.getString("ORDERTYPE"))
+                                    , object.getString("ITEMCODE")
+                                    , object.getString("ITEMNAME")
+                                    , Integer.parseInt(object.getString("QTY"))
+                                    , Double.parseDouble(object.getString("PRICE"))
+                                    , Integer.parseInt(object.getString("POSNO"))
+                                    , Integer.parseInt(object.getString("TABLENO"))
+                                    , object.getString("SECTIONNO")
+                                    , object.getString("ISUPDATE")
+                                    , "0"
+                                    , object.getString("NOTE")
+                            );
+                            Log.e("socket order ", orders.getOrderNumber());
+                            socketOrderList.add(orders);
+                            databaseHandler.addOrdersBySocket(orders);
+//                            String checkSocketOrder = "" + orders.getQuantity()
+//                                    + orders.getNote()
+//                                    + orders.getPrice()
+//                                    + orders.getItemCode()
+//                                    + orders.getItemName()
+//                                    + orders.getScreenNo()
+//                                    + orders.getIsUpdated();
+////                            socketOrdersList.add(orders);
+////                            Log.e("checkSocketOrder", checkSocketOrder);
+//
+//                            for (int m = 0; m < size; m++) {
+//                                isFound = false;
+//                                String checkOrder = "" + ordersList.get(m).getQuantity()
+//                                        + ordersList.get(m).getNote()
+//                                        + ordersList.get(m).getPrice()
+//                                        + ordersList.get(m).getItemCode()
+//                                        + ordersList.get(m).getItemName()
+//                                        + KitchenSettingsModel.SCREEN_NO
+//                                        + ordersList.get(m).getIsUpdated();
+//                                Log.e("checkOrder", checkOrder);
+//
+//                                Log.e("equalss", "" + checkSocketOrder.equals(checkOrder));
+//                                if (checkSocketOrder.equals(checkOrder)) {
+//                                    isFound = true;
+//                                    m = ordersList.size();
+//                                }
+//                            }
+//                            Log.e("is found", "" + !isFound);
+//                            if (!isFound) {
+//                                databaseHandler.addOrders(orders);
+//                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+//                showData();
+                if (textChecker.getText().toString().equals("3"))
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textChecker.setText("2");
+                        }
+                    });
+//                for (int y = 0; y < ordersList.size(); y++)
+//                    Log.e("ordersList after", "" + ordersList.get(y).getOrderNumber());
+            }
+        });
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.orders_list_settings_button) {
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+//            if (KitchenSettingsModel.FILLED) {
+//            databaseHandler.getkitchenSettings();
+//            companyNo.setText(KitchenSettingsModel.COMPANY_NO);
+//            companyYear.setText(KitchenSettingsModel.COMPANY_YEAR);
+//            posNo.setText(KitchenSettingsModel.POS_NO);
+//            screenNo.setText(KitchenSettingsModel.SCREEN_NO);
+//            } else {
+//                KitchenSettingsModel.FILLED = false;
+//            }
+
+            saveSettings.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    if (!TextUtils.isEmpty(companyNo.getText()) && !TextUtils.isEmpty(companyYear.getText())
+                            && !TextUtils.isEmpty(posNo.getText()) && !TextUtils.isEmpty(screenNo.getText())) {
+
+                        databaseHandler.deletekitchenSettings();
+                        ordersList.clear();
+                        filteredOrders.clear();
+                        orderNo.clear();
+                        KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
+                        KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
+                        KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
+                        KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
+                        KitchenSettingsModel.FILLED = true;
+                        databaseHandler.addkitchenSettings();
+                        dialog.dismiss();
+                        finish();
+                        startActivity(getIntent());
+
+                    } else
+                        Toast.makeText(MainActivity.this, "Please fill empty fields!", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            cancelSettings.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                }
+            });
+            dialog.show();
+        }
+    }
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
