@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
     public static List<Orders> ordersList = new ArrayList<>();
     public static List<Orders> socketOrderList = new ArrayList<>();
     public static List<Orders> cloudOrderList = new ArrayList<>();
-    public static List<String> orderNo = new ArrayList<>();
+    public static ArrayList<Integer> orderNo = new ArrayList<>();
     public static List<String> deletedOrders = new ArrayList<>();
     public static Set<String> orderNoWithoutDup;
     List<String> dateSort2 = new ArrayList<>();
@@ -77,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
     public static TextView textChecker;
     boolean checkSound = true;
 
-    private String domain, point;
+    private String domain, point, orderListAsString;
     private int position = 0;
     static int sizeBefore = 0, sizeAfter = 0;
 
@@ -239,6 +240,22 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
     }
 
+    public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list)
+    {
+        // Create a new LinkedHashSet
+        Set<T> set = new LinkedHashSet<>();
+        // Add the elements to set
+        set.addAll(list);
+        // Clear the list
+        list.clear();
+        // add the elements of set
+        // with no duplicates to the list
+        list.addAll(set);
+
+        // return the list
+        return list;
+    }
+
     public ArrayList<List<Orders>> filterOrdersByTableNo() {
         removeDuplicateOrders();
 
@@ -251,11 +268,12 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             convertToEnglish();
 
             for (int m = 0; m < ordersList.size(); m++) {
-                orderNo.add(ordersList.get(m).getOrderNumber());
+                orderNo.add(Integer.parseInt(ordersList.get(m).getOrderNumber()));
             }
-            orderNoWithoutDup = new HashSet<>(orderNo);
-            orderNo.clear();
-            orderNo.addAll(orderNoWithoutDup);
+            removeDuplicates(orderNo);
+//            orderNoWithoutDup = new HashSet<>(orderNo);
+//            orderNo.clear();
+//            orderNo.addAll(orderNoWithoutDup);
 
 //            Collections.sort(orderNo);
             // Method to get all orders for specific table
@@ -265,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
                 for (int k = 0; k < ordersList.size(); k++) { //KitchenJSONPresenter.ordersList.size()
 //                    Log.e("without name", "" + KitchenJSONPresenter.ordersList.get(k).getOrderNumber());
-                    if (orderNo.get(j).equals(ordersList.get(k).getOrderNumber())) {//KitchenJSONPresenter.ordersList.get(k).getOrderNumber()
+                    if (orderNo.get(j)== Integer.parseInt(ordersList.get(k).getOrderNumber())) {//KitchenJSONPresenter.ordersList.get(k).getOrderNumber()
                         ordersForOneTable.add(ordersList.get(k));//KitchenJSONPresenter.ordersList.get(k)
 
                         Log.e("main:oneTable k", "" + ordersList.get(k).getOrderNumber());
@@ -360,9 +378,11 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //            String newValue = (((ordersList.get(i).getDateIn() + "").replaceAll("ص", "am")).replaceAll("م", "pm"));
 //            String[] splitString = newValue.split("\\s+", 3);
 //            String[] splitString2 = splitString[1].split(":", 3);
-            String[] splitString2 = ordersList.get(i).getDateIn().split("\\s+", 2);
-            Log.e("splitString...", "" + splitString2);
-            dateSort2.add(splitString2[0] + splitString2[1]);
+            String[] splitString = ordersList.get(i).getDateIn().split("\\s+", 2);
+            Log.e("splitString...", "" + splitString);
+            String[] splitString2 = splitString[1].split(":", 3);
+
+            dateSort2.add(splitString2[0] + splitString2[1] + splitString2[2]);
 //            if (splitString[2].contains("pm")) {
 //                int val = Integer.parseInt(splitString2[0]) + 12;
 //                dateSort2.add("" + val + splitString2[1] + splitString2[2]);
@@ -384,7 +404,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         Collections.sort(ordersList, new DateInComparator());
 
         for (int k = 0; k < ordersList.size(); k++) {
-            Log.e("final", "" + ordersList.get(k).getDateIn());
+            Log.e("final", "" + ordersList.get(k).getOrderNumber() + ordersList.get(k).getDateIn());
         }
     }
 
