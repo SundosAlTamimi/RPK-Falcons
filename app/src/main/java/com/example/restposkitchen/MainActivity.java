@@ -379,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //            String[] splitString = newValue.split("\\s+", 3);
 //            String[] splitString2 = splitString[1].split(":", 3);
             String[] splitString = ordersList.get(i).getDateIn().split("\\s+", 2);
-            Log.e("splitString...", "" + splitString);
+            Log.e("splitString...", "" + ordersList.get(i).getDateIn());
             String[] splitString2 = splitString[1].split(":", 3);
 
             dateSort2.add(splitString2[0] + splitString2[1] + splitString2[2]);
@@ -578,7 +578,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject object = jsonArray.getJSONObject(i);
 
-                            Orders orders = new Orders("TRINDATE"
+                            Orders orders = new Orders(object.getString("TRINDATE")
                                     , object.getString("ORDERNO")
                                     , Integer.parseInt(object.getString("ORDERTYPE"))
                                     , object.getString("ITEMCODE")
