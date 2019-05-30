@@ -21,4 +21,9 @@
     <string name="Screen_no">Screen No</string>
     <string name="timer_duration">Timer (second)</string>
 
+    <string name="save">Save</string>
+    <string name="clean_kitchen">Clean Kitchen</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">Ok</string>
+
 </resources>

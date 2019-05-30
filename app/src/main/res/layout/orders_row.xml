@@ -144,7 +144,7 @@
             android:background="@color/layer4"
             android:gravity="center"
             android:paddingHorizontal="5dp"
-            android:text="Item Name"
+            android:text="@string/item_name"
             android:textColor="@color/text_color"
             android:textSize="14sp" />
 
@@ -155,7 +155,7 @@
             android:layout_weight="1"
             android:background="@color/layer4"
             android:gravity="center"
-            android:text="Qty"
+            android:text="@string/quantity"
             android:textColor="@color/text_color"
             android:textSize="14sp" />
 
@@ -166,7 +166,7 @@
             android:layout_weight="1"
             android:background="@color/layer4"
             android:gravity="center"
-            android:text="Note"
+            android:text="@string/note"
             android:textColor="@color/text_color"
             android:textSize="14sp" />
     </LinearLayout>

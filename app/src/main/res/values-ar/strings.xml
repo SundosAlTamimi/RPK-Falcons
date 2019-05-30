@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RestPosKitchen</string>
+
+    <string name="order_number">رقم الطلب: </string>
+    <string name="order_type">نوع الطلب</string>
+    <string name="table_number">رقم الطاولة: </string>
+    <string name="section_number">رقم القسم: </string>
+    <string name="item_name">اسم المادة</string>
+    <string name="quantity">الكمية</string>
+    <string name="note">ملاحظات</string>
+    <string name="no_update">لا يوجد تعديل</string>
+    <string name="dine_in">حجز طاولة</string>
+    <string name="take_away">طلب سفري</string>
+    <string name="title_activity_handy_testing">HandyTestingActivity</string>
+
+    <string name="enter_password">ادخل الرقم السري</string>
+
+    <string name="company_no">رقم الشركة</string>
+    <string name="company_year">السنة(الشركة)</string>
+    <string name="pos_no">رقم الفرع</string>
+    <string name="Screen_no">رقم الشاشة</string>
+    <string name="timer_duration">المؤقت(ثانية)</string>
+
+    <string name="save">حفظ</string>
+    <string name="clean_kitchen">مسح الطلبات</string>
+    <string name="cancel">الغاء</string>
+    <string name="ok">موافق</string>
+</resources>
