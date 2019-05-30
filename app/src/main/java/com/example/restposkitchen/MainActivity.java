@@ -271,11 +271,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                 orderNo.add(Integer.parseInt(ordersList.get(m).getOrderNumber()));
             }
             removeDuplicates(orderNo);
-//            orderNoWithoutDup = new HashSet<>(orderNo);
-//            orderNo.clear();
-//            orderNo.addAll(orderNoWithoutDup);
 
-//            Collections.sort(orderNo);
             // Method to get all orders for specific table
             for (int j = 0; j < orderNo.size(); j++) {
                 List<Orders> ordersForOneTable = new ArrayList<>();
@@ -289,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                         Log.e("main:oneTable k", "" + ordersList.get(k).getOrderNumber());
                     }
                 }
-//                Collections.sort(ordersForOneTable);
+                Collections.sort(ordersForOneTable, new OrderByItemCodeComparator());
                 filteredOrders.add(ordersForOneTable);
             }
         }
@@ -369,6 +365,12 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             ordersList = cloudOrderList;
         }
 
+    }
+
+    public class OrderByItemCodeComparator implements Comparator<Orders> {
+        public int compare(Orders order1, Orders order2) {
+            return order1.getItemCode().compareTo(order2.getItemCode());
+        }
     }
 
     public void convertToEnglish() {
