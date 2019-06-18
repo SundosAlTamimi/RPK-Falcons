@@ -14,4 +14,8 @@ public class KitchenSettingsModel {
 
     public static boolean FILLED = false;
 
+    public static String URL = "http://falconssoft.net/RestService/FSAppServiceDLL.dll/";
+
+
+
 }

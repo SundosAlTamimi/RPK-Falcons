@@ -59,9 +59,21 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
 
     public void sendKitchenRequest() {
         mainActivity.showLoading();
-        urlKitchenOrders = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/GetRestKitchenData?compno="
+        urlKitchenOrders = KitchenSettingsModel.URL + "GetRestKitchenData?compno="
                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                 + "&POSNO=" + KitchenSettingsModel.POS_NO + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+//        JSONObject jsonObject = new JSONObject();
+//        try {
+//            jsonObject.put("compno", KitchenSettingsModel.COMPANY_NO);
+//            jsonObject.put("compyear", KitchenSettingsModel.COMPANY_YEAR);
+//            jsonObject.put("POSNO", KitchenSettingsModel.POS_NO);
+//            jsonObject.put("SCREENNO", KitchenSettingsModel.COMPANY_NO);
+//
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//        JSONArray jsonArray = new JSONArray();
+//        jsonArray.put(jsonObject);
         utf8JsonRequest = new UTF8GetKitchenOrders(Request.Method.GET, urlKitchenOrders, null, this, this);
         requestQueue.add(utf8JsonRequest);
 
@@ -236,7 +248,6 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
@@ -247,12 +258,23 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
 //        progressDialog.show();
 //        arrayRequest = new JsonArrayRequest(Request.Method.GET, urlKitchenOrders, null, this, this);
 
-        urlInternetTesting = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/GetRestKitchenData?compno="
+        urlInternetTesting = KitchenSettingsModel.URL + "GetRestKitchenData?compno="
                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                 + "&POSNO=" + KitchenSettingsModel.POS_NO + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+//        JSONObject jsonObject = new JSONObject();
+//        try {
+//            jsonObject.put("compno", KitchenSettingsModel.COMPANY_NO);
+//            jsonObject.put("compyear", KitchenSettingsModel.COMPANY_YEAR);
+//            jsonObject.put("POSNO", KitchenSettingsModel.POS_NO);
+//            jsonObject.put("SCREENNO", KitchenSettingsModel.COMPANY_NO);
+//
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//        JSONArray jsonArray = new JSONArray();
+//        jsonArray.put(jsonObject);
         utf8TestInternetConnection = new UTF8TestInternetConnection(Request.Method.GET, urlInternetTesting, null, new TestInternetConnectionClass(), new TestInternetConnectionClass());
         requestQueue.add(utf8TestInternetConnection);
-
     }
 
     public class UTF8TestInternetConnection extends JsonRequest<JSONArray> {

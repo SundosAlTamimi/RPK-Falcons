@@ -380,11 +380,14 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //            String newValue = (((ordersList.get(i).getDateIn() + "").replaceAll("ص", "am")).replaceAll("م", "pm"));
 //            String[] splitString = newValue.split("\\s+", 3);
 //            String[] splitString2 = splitString[1].split(":", 3);
+            if (!ordersList.get(i).getDateIn().equals("TRINDATE")){
             String[] splitString = ordersList.get(i).getDateIn().split("\\s+", 2);
+            Log.e("splitname...", "" + ordersList.get(i).getItemName());
             Log.e("splitString...", "" + ordersList.get(i).getDateIn());
+
             String[] splitString2 = splitString[1].split(":", 3);
 
-            dateSort2.add(splitString2[0] + splitString2[1] + splitString2[2]);
+            dateSort2.add(splitString2[0] + splitString2[1] + splitString2[2]);}
 //            if (splitString[2].contains("pm")) {
 //                int val = Integer.parseInt(splitString2[0]) + 12;
 //                dateSort2.add("" + val + splitString2[1] + splitString2[2]);
@@ -460,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
         if (event.getAction() == DragEvent.ACTION_DROP) {
             point = filteredOrders.get(position).get(0).getOrderNumber();
-            domain = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
+            domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
                     + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                     + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
                     + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
@@ -490,10 +493,11 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         point = filteredOrders.get(position).get(0).getOrderNumber();
-                        domain = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
+                        domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
                                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                                 + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
                                 + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+                        Log.e("point" , "" + domain);
 
                         checkSound = false;
                         databaseHandler.deleteFromSocketAndCloud(point);
@@ -537,7 +541,6 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //                            output.flush();
                             filterSocketAndServerOrders(stringData);
                         }
-
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
@@ -550,7 +553,6 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //                            s.close();
 //                            break;
 //                        }
-
                         stringData = null;
                         output.close();
                         s.close();
@@ -560,7 +562,6 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                     e.printStackTrace();
                 }
             }
-
         });
         thread.start();
     }
