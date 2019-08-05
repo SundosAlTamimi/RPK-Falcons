@@ -128,10 +128,19 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                     Log.e("main:deletedOrders", "" + deletedOrders.size());
                     if (deletedOrders.size() != 0) {
                         for (int i = 0; i < deletedOrders.size(); i++) {
-                            String domain = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
-                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
-                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + deletedOrders.get(i)
-                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+//                            String domain = "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
+//                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+//                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + deletedOrders.get(i)
+//                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+
+                         String   domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
+                                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                                 + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
+                                 + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+
+                            Log.e("clean kitchen",""+domain);
+
+
                             presenter.updateOrdersRequest(domain);
                             databaseHandler.deleteFromBindingList(deletedOrders.get(i));
                         }
@@ -257,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
     }
 
     public ArrayList<List<Orders>> filterOrdersByTableNo() {
-        removeDuplicateOrders();
+        removeDuplicateOrders(); // remove duplicate orders from socket and cloud
 
         if (ordersList.size() != 0 && checkSound) {
             sizeAfter = ordersList.size();
@@ -265,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                 mediaPlayer.start();
         }
         if (ordersList.size() != 0) {
-            convertToEnglish();
+            sortByTime();
 
             for (int m = 0; m < ordersList.size(); m++) {
                 orderNo.add(Integer.parseInt(ordersList.get(m).getOrderNumber()));
@@ -310,6 +319,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             for (int i = 0; i < cloudOrderList.size(); i++) {
                 isFound = false;
                 String checkCloudOrder = "" + cloudOrderList.get(i).getOrderNumber()
+                        + cloudOrderList.get(i).getCashNumber()
                         + cloudOrderList.get(i).getOrderType()
                         + cloudOrderList.get(i).getItemCode()
                         + cloudOrderList.get(i).getItemName()
@@ -326,6 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                 //26801111mall soop22.01-1-10
                 for (int j = 0; j < socketOrderList.size(); j++) {
                     String checkSocketOrder = "" + socketOrderList.get(j).getOrderNumber()
+                            + socketOrderList.get(j).getCashNumber()
                             + socketOrderList.get(j).getOrderType()
                             + socketOrderList.get(j).getItemCode()
                             + socketOrderList.get(j).getItemName()
@@ -373,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         }
     }
 
-    public void convertToEnglish() {
+    public void sortByTime() {
         Log.e("ordersList...", "" + ordersList.size());
         dateSort2.clear();
         for (int i = 0; i < ordersList.size(); i++) {
@@ -466,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
                     + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                     + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
-                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
 
             checkSound = false;
             databaseHandler.deleteFromSocketAndCloud(point);
@@ -493,10 +504,11 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         point = filteredOrders.get(position).get(0).getOrderNumber();
-                        domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
+                        domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
                                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                                 + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
-                                + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+                                + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+
                         Log.e("point" , "" + domain);
 
                         checkSound = false;
@@ -582,6 +594,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                             JSONObject object = jsonArray.getJSONObject(i);
 
                             Orders orders = new Orders(object.getString("TRINDATE")
+                                    , object.getString("CASHNO")
                                     , object.getString("ORDERNO")
                                     , Integer.parseInt(object.getString("ORDERTYPE"))
                                     , object.getString("ITEMCODE")
@@ -686,10 +699,19 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
                                                     if (filteredOrders.size() != 0) {
                                                         for (int i = 0; i < filteredOrders.size(); i++) {
-                                                            presenter.updateOrdersRequest("http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
+
+//                                                            "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
+//                                                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+//                                                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(i).get(0).getOrderNumber()
+//                                                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO
+                                                            String  domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
                                                                     + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                                                                     + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(i).get(0).getOrderNumber()
-                                                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO);
+                                                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(i).get(0).getCashNumber();
+
+                                                            Log.e("clean kitchen",""+domain);
+
+                                                            presenter.updateOrdersRequest(domain);
                                                         }
                                                     }
 

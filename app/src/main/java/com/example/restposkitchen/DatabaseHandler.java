@@ -37,6 +37,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String ORDERS_TABLE = "ORDERS";
 
     private static final String DATE_IN = "DATE_IN";
+    private static final String CASH_NO = "CASH_NO";
     private static final String ORDER_NO = "ORDER_NO";
     private static final String ORDER_TYPE = "ORDER_TYPE";
     private static final String ITEM_CODE = "ITEM_CODE";
@@ -54,6 +55,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String SOCKET_TABLE = "SOCKET";
 
     private static final String SOCKET_DATE_IN = "DATE_IN";
+    private static final String SOCKET_CASH_NO = "CASH_NO";
     private static final String SOCKET_ORDER_NO = "ORDER_NO";
     private static final String SOCKET_ORDER_TYPE = "ORDER_TYPE";
     private static final String SOCKET_ITEM_CODE = "ITEM_CODE";
@@ -95,6 +97,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String CREATE_TABLE_ORDERS = "CREATE TABLE IF NOT EXISTS " + ORDERS_TABLE + "("
                 + DATE_IN + " TEXT,"
+                + CASH_NO + " TEXT,"
                 + ORDER_NO + " TEXT,"
                 + ORDER_TYPE + " INTEGER,"
                 + ITEM_CODE + " TEXT,"
@@ -111,6 +114,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         String CREATE_TABLE_SOCKET_ORDERS = "CREATE TABLE IF NOT EXISTS " + SOCKET_TABLE + "("
                 + SOCKET_DATE_IN + " TEXT,"
+                + SOCKET_CASH_NO + " TEXT,"
                 + SOCKET_ORDER_NO + " TEXT,"
                 + SOCKET_ORDER_TYPE + " INTEGER,"
                 + SOCKET_ITEM_CODE + " TEXT,"
@@ -219,6 +223,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
 
         values.put(DATE_IN, orders.getDateIn());
+        values.put(CASH_NO, orders.getCashNumber());
         values.put(ORDER_NO, orders.getOrderNumber());
         values.put(ORDER_TYPE, orders.getOrderType());
         values.put(ITEM_CODE, orders.getItemCode());
@@ -247,18 +252,19 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             do {
                 Orders orders = new Orders();
                 orders.setDateIn(cursor.getString(0));
-                orders.setOrderNumber(cursor.getString(1));
-                orders.setOrderType(cursor.getInt(2));
-                orders.setItemCode(cursor.getString(3));
-                orders.setItemName(cursor.getString(4));
-                orders.setQuantity(cursor.getInt(5));
-                orders.setPrice(cursor.getDouble(6));
-                orders.setPosNumber(cursor.getInt(7));
-                orders.setTableNumber(cursor.getInt(8));
-                orders.setSection(cursor.getString(9));
-                orders.setIsUpdated(cursor.getString(10));
-//                orders.setDone(cursor.getString(11));
-                orders.setNote(cursor.getString(12));
+                orders.setCashNumber(cursor.getString(1));
+                orders.setOrderNumber(cursor.getString(2));
+                orders.setOrderType(cursor.getInt(3));
+                orders.setItemCode(cursor.getString(4));
+                orders.setItemName(cursor.getString(5));
+                orders.setQuantity(cursor.getInt(6));
+                orders.setPrice(cursor.getDouble(7));
+                orders.setPosNumber(cursor.getInt(8));
+                orders.setTableNumber(cursor.getInt(9));
+                orders.setSection(cursor.getString(10));
+                orders.setIsUpdated(cursor.getString(11));
+//                orders.setDone(cursor.getString(12));
+                orders.setNote(cursor.getString(13));
 
                 ordersList.add(orders);
             } while (cursor.moveToNext());
@@ -294,6 +300,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
 
         values.put(SOCKET_DATE_IN, orders.getDateIn());
+        values.put(SOCKET_CASH_NO, orders.getCashNumber());
         values.put(SOCKET_ORDER_NO, orders.getOrderNumber());
         values.put(SOCKET_ORDER_TYPE, orders.getOrderType());
         values.put(SOCKET_ITEM_CODE, orders.getItemCode());
@@ -308,7 +315,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(SOCKET_NOTE, orders.getNote());
 
         database.insert(SOCKET_TABLE, null, values);
-database.close();
+        database.close();
     }
 
     public List<Orders> getOrdersFromSocket() {
@@ -321,18 +328,19 @@ database.close();
             do {
                 Orders orders = new Orders();
                 orders.setDateIn(cursor.getString(0));
-                orders.setOrderNumber(cursor.getString(1));
-                orders.setOrderType(cursor.getInt(2));
-                orders.setItemCode(cursor.getString(3));
-                orders.setItemName(cursor.getString(4));
-                orders.setQuantity(cursor.getInt(5));
-                orders.setPrice(cursor.getDouble(6));
-                orders.setPosNumber(cursor.getInt(7));
-                orders.setTableNumber(cursor.getInt(8));
-                orders.setSection(cursor.getString(9));
-                orders.setIsUpdated(cursor.getString(10));
-//                orders.setDone(cursor.getString(11));
-                orders.setNote(cursor.getString(12));
+                orders.setCashNumber(cursor.getString(1));
+                orders.setOrderNumber(cursor.getString(2));
+                orders.setOrderType(cursor.getInt(3));
+                orders.setItemCode(cursor.getString(4));
+                orders.setItemName(cursor.getString(5));
+                orders.setQuantity(cursor.getInt(6));
+                orders.setPrice(cursor.getDouble(7));
+                orders.setPosNumber(cursor.getInt(8));
+                orders.setTableNumber(cursor.getInt(9));
+                orders.setSection(cursor.getString(10));
+                orders.setIsUpdated(cursor.getString(11));
+//                orders.setDone(cursor.getString(12));
+                orders.setNote(cursor.getString(13));
 
                 ordersList.add(orders);
             } while (cursor.moveToNext());
@@ -350,8 +358,8 @@ database.close();
 
     public void deleteFromSocketAndCloud(String orderNumber) {
         database = this.getWritableDatabase();
-        String sqldelete ="Delete from SOCKET where ORDER_NO = '"+orderNumber+"';" ;
-        String sqldelete1 = "Delete from ORDERS where  ORDER_NO = '"+orderNumber+"';";
+        String sqldelete = "Delete from SOCKET where ORDER_NO = '" + orderNumber + "';";
+        String sqldelete1 = "Delete from ORDERS where  ORDER_NO = '" + orderNumber + "';";
         database.execSQL(sqldelete);
         database.execSQL(sqldelete1);
         database.close();

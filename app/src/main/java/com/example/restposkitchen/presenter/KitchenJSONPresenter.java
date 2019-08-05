@@ -143,6 +143,7 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
 //                String s = encodingJson(object.getString("ITEMNAME"));
 
                     Orders orders = new Orders(object.getString("TRINDATE")
+                            , object.getString("CASHNO")
                             , object.getString("ORDERNO")
                             , object.getInt("ORDERTYPE")
                             , object.getString("ITEMCODE")

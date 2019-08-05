@@ -73,7 +73,7 @@ public class OrdersAdapter extends BaseAdapter {
         ImageButton deleteOrder = convertView.findViewById(R.id.orderRow_delete_order);
 
         if (filteredOrders.size() != 0) {
-            orderNoTextView.setText("" + filteredOrders.get(position).get(0).getOrderNumber());
+            orderNoTextView.setText("C" + filteredOrders.get(position).get(0).getCashNumber()+ "-"+ filteredOrders.get(position).get(0).getOrderNumber());
 
             if (filteredOrders.get(position).get(0).getOrderType() == 0) {
                 tableNoTextView.setText("---");

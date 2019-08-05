@@ -3,6 +3,7 @@ package com.example.restposkitchen.model;
 public class Orders {
 
     private String dateIn;
+    private String cashNumber;
     private String orderNumber;///
     private int orderType;///
     private String itemCode;
@@ -25,8 +26,9 @@ public class Orders {
     }
 
     // for data from server
-    public Orders(String dateIn, String orderNumber, int orderType, String itemCode, String itemName, int quantity, double price, int posNumber, int tableNumber, String section, String isUpdated, String done, String note) {
+    public Orders(String dateIn, String cashNumber, String orderNumber, int orderType, String itemCode, String itemName, int quantity, double price, int posNumber, int tableNumber, String section, String isUpdated, String done, String note) {
         this.dateIn = dateIn;
+        this.cashNumber = cashNumber;
         this.orderNumber = orderNumber;
         this.orderType = orderType;
         this.itemCode = itemCode;
@@ -51,6 +53,14 @@ public class Orders {
         this.itemName = itemName;
         this.screenNo = screenNo;
         this.isUpdated = isUpdated;
+    }
+
+    public String getCashNumber() {
+        return cashNumber;
+    }
+
+    public void setCashNumber(String cashNumber) {
+        this.cashNumber = cashNumber;
     }
 
     public String getDateIn() {
