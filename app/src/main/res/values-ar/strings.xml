@@ -22,6 +22,12 @@
     <string name="pos_no">رقم الفرع</string>
     <string name="Screen_no">رقم الشاشة</string>
     <string name="timer_duration">المؤقت(ثانية)</string>
+    <string name="stage_type">نوع المنصّة</string>
+    <string name="done">غير انتقالي</string>
+    <string name="transfer">انتقالي</string>
+    <string name="ip_address">عنوان IP للجهاز المستقبل</string>
+    <string name="stage_no">رقم المنصّة</string>
+    <string name="url">URL</string>
 
     <string name="save">حفظ</string>
     <string name="clean_kitchen">مسح الطلبات</string>

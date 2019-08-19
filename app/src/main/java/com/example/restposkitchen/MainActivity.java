@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.graphics.ColorSpace;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +22,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,13 +39,13 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -85,8 +87,11 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
     boolean isFound = false; // used for compare cloud and socket values
 
     private Dialog dialog, passwordDialog;
-    private EditText companyNo, companyYear, posNo, screenNo, timerDuration, passwordField;
+    private EditText companyNo, companyYear, posNo, screenNo, timerDuration, passwordField, ipAddressForReceiver, stageNo, getOrdersURL;
+    private RadioGroup radioGroup;
+    private RadioButton doneRadioButton, transferRadioButton;
     private Button saveSettings, cleanKitchen, cancelSettings, checkPassword;
+    private LinearLayout stageNoLinear, ipAddressLinear;
 
     @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     @Override
@@ -100,7 +105,9 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         startServerSocket();
 
         if (!TextUtils.isEmpty(KitchenSettingsModel.COMPANY_NO) && !TextUtils.isEmpty(KitchenSettingsModel.COMPANY_YEAR)
-                && !TextUtils.isEmpty(KitchenSettingsModel.POS_NO) && !TextUtils.isEmpty(KitchenSettingsModel.SCREEN_NO)) {
+                && !TextUtils.isEmpty(KitchenSettingsModel.POS_NO) && !TextUtils.isEmpty(KitchenSettingsModel.SCREEN_NO)
+                && !TextUtils.isEmpty(KitchenSettingsModel.STAGE_TYPE) && !TextUtils.isEmpty(KitchenSettingsModel.URL)
+                && !TextUtils.isEmpty(KitchenSettingsModel.STAGE_NO)) {
             KitchenSettingsModel.FILLED = true;
             companyNo.setText(KitchenSettingsModel.COMPANY_NO);
             companyNo.setSelection(companyNo.getText().length());// change writing indicator position
@@ -108,8 +115,25 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             posNo.setText(KitchenSettingsModel.POS_NO);
             screenNo.setText(KitchenSettingsModel.SCREEN_NO);
             timerDuration.setText(KitchenSettingsModel.TIMER_DURATION);
+            getOrdersURL.setText(KitchenSettingsModel.URL);
+            stageNo.setText(KitchenSettingsModel.STAGE_NO);
+
+            if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+//                Log.e("check", "transfer");
+                ipAddressLinear.setVisibility(View.VISIBLE);
+                transferRadioButton.setChecked(true);
+                ipAddressForReceiver.setText(KitchenSettingsModel.IP_OF_RECEIVER);
+
+            } else {
+//                Log.e("check", "done");
+                ipAddressLinear.setVisibility(View.GONE);
+                doneRadioButton.setChecked(true);
+            }
 
         } else {
+            ipAddressLinear.setVisibility(View.GONE);
+            doneRadioButton.setChecked(true);
+            KitchenSettingsModel.STAGE_TYPE = "done";
             KitchenSettingsModel.FILLED = false;
             Toast.makeText(this, "Please check settings first!", Toast.LENGTH_SHORT).show();
         }
@@ -132,13 +156,12 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
 //                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + deletedOrders.get(i)
 //                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+                            String domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
+                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
+                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
 
-                         String   domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
-                                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
-                                 + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
-                                 + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
-
-                            Log.e("clean kitchen",""+domain);
+                            Log.e("clean kitchen", "" + domain);
 
 
                             presenter.updateOrdersRequest(domain);
@@ -212,6 +235,15 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         posNo = dialog.findViewById(R.id.kitchen_settings_pos_no);
         screenNo = dialog.findViewById(R.id.kitchen_settings_screen_no);
         timerDuration = dialog.findViewById(R.id.kitchen_settings_timer);
+        radioGroup = dialog.findViewById(R.id.kitchen_settings_radioGroup);
+        doneRadioButton = dialog.findViewById(R.id.kitchen_settings_done);
+        transferRadioButton = dialog.findViewById(R.id.kitchen_settings_transfer);
+        ipAddressForReceiver = dialog.findViewById(R.id.kitchen_settings_IP_address);
+        stageNo = dialog.findViewById(R.id.kitchen_settings_stageNo);
+        getOrdersURL = dialog.findViewById(R.id.kitchen_settings_url);
+        stageNoLinear = dialog.findViewById(R.id.kitchen_settings_stageNo_linear);
+        ipAddressLinear = dialog.findViewById(R.id.kitchen_settings_IP_linear);
+
         saveSettings = dialog.findViewById(R.id.kitchen_settings_save);
         cleanKitchen = dialog.findViewById(R.id.kitchen_settings_clean_kitchen);
         cancelSettings = dialog.findViewById(R.id.kitchen_settings_cancel);
@@ -230,6 +262,8 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         deleteButton = findViewById(R.id.orders_list_delete_button);
         deleteButton.setVisibility(View.INVISIBLE);
         deleteButton.setOnDragListener(this);
+
+
     }
 
     @Override
@@ -249,8 +283,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
     }
 
-    public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list)
-    {
+    public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list) {
         // Create a new LinkedHashSet
         Set<T> set = new LinkedHashSet<>();
         // Add the elements to set
@@ -284,14 +317,14 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             // Method to get all orders for specific table
             for (int j = 0; j < orderNo.size(); j++) {
                 List<Orders> ordersForOneTable = new ArrayList<>();
-                Log.e("main:oneTable j", "" + orderNo.get(j));
+//                Log.e("main:oneTable j", "" + orderNo.get(j));
 
                 for (int k = 0; k < ordersList.size(); k++) { //KitchenJSONPresenter.ordersList.size()
 //                    Log.e("without name", "" + KitchenJSONPresenter.ordersList.get(k).getOrderNumber());
-                    if (orderNo.get(j)== Integer.parseInt(ordersList.get(k).getOrderNumber())) {//KitchenJSONPresenter.ordersList.get(k).getOrderNumber()
+                    if (orderNo.get(j) == Integer.parseInt(ordersList.get(k).getOrderNumber())) {//KitchenJSONPresenter.ordersList.get(k).getOrderNumber()
                         ordersForOneTable.add(ordersList.get(k));//KitchenJSONPresenter.ordersList.get(k)
 
-                        Log.e("main:oneTable k", "" + ordersList.get(k).getOrderNumber());
+//                        Log.e("main:oneTable k", "" + ordersList.get(k).getOrderNumber());
                     }
                 }
                 Collections.sort(ordersForOneTable, new OrderByItemCodeComparator());
@@ -330,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                         + cloudOrderList.get(i).getSection()
                         + cloudOrderList.get(i).getIsUpdated()
                         + cloudOrderList.get(i).getNote();
-                Log.e("cloud order", checkCloudOrder);
+//                Log.e("cloud order", checkCloudOrder);
 //{"PRICE":2,"ITEMCODE":"1111","SECTIONNO":-1,"POSNO":1,"QTY":2,"ORDERTYPE":0,"NOTE":"","ORDERNO":"268","TABLENO":-1,"ITEMNAME":"mall soop","ISUPDATE":0}
                 //26801111mall soop22.01-1-10
                 //26801111mall soop22.01-1-10
@@ -347,8 +380,8 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                             + socketOrderList.get(j).getSection()
                             + socketOrderList.get(j).getIsUpdated()
                             + socketOrderList.get(j).getNote();
-                    Log.e("checkSocketOrder", checkSocketOrder);
-                    Log.e("boolean:", "" + checkCloudOrder.equals(checkSocketOrder));
+//                    Log.e("checkSocketOrder", checkSocketOrder);
+//                    Log.e("boolean:", "" + checkCloudOrder.equals(checkSocketOrder));
                     if (checkCloudOrder.equals(checkSocketOrder)) {
                         isFound = true;
                         ordersList.add(cloudOrderList.get(i));
@@ -391,14 +424,15 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //            String newValue = (((ordersList.get(i).getDateIn() + "").replaceAll("ص", "am")).replaceAll("م", "pm"));
 //            String[] splitString = newValue.split("\\s+", 3);
 //            String[] splitString2 = splitString[1].split(":", 3);
-            if (!ordersList.get(i).getDateIn().equals("TRINDATE")){
-            String[] splitString = ordersList.get(i).getDateIn().split("\\s+", 2);
-            Log.e("splitname...", "" + ordersList.get(i).getItemName());
-            Log.e("splitString...", "" + ordersList.get(i).getDateIn());
+            if (!ordersList.get(i).getDateIn().equals("TRINDATE")) {
+                String[] splitString = ordersList.get(i).getDateIn().split("\\s+", 2);
+//                Log.e("splitname...", "" + ordersList.get(i).getItemName());
+//                Log.e("splitString...", "" + ordersList.get(i).getDateIn());
 
-            String[] splitString2 = splitString[1].split(":", 3);
+                String[] splitString2 = splitString[1].split(":", 3);
 
-            dateSort2.add(splitString2[0] + splitString2[1] + splitString2[2]);}
+                dateSort2.add(splitString2[0] + splitString2[1] + splitString2[2]);
+            }
 //            if (splitString[2].contains("pm")) {
 //                int val = Integer.parseInt(splitString2[0]) + 12;
 //                dateSort2.add("" + val + splitString2[1] + splitString2[2]);
@@ -419,9 +453,9 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //        Collections.sort(dateSort3);
         Collections.sort(ordersList, new DateInComparator());
 
-        for (int k = 0; k < ordersList.size(); k++) {
-            Log.e("final", "" + ordersList.get(k).getOrderNumber() + ordersList.get(k).getDateIn());
-        }
+//        for (int k = 0; k < ordersList.size(); k++) {
+//            Log.e("final", "" + ordersList.get(k).getOrderNumber() + ordersList.get(k).getDateIn());
+//        }
     }
 
     public class DateInComparator implements Comparator<Orders> {
@@ -474,10 +508,23 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
         if (event.getAction() == DragEvent.ACTION_DROP) {
             point = filteredOrders.get(position).get(0).getOrderNumber();
-            domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
-                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
-                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
-                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+//            Log.e("a", KitchenSettingsModel.STAGE_TYPE);
+//            Log.e("b", "" + KitchenSettingsModel.STAGE_TYPE.equals("done"));
+//            Log.e("c", "" + KitchenSettingsModel.STAGE_TYPE.equals("transfer"));
+
+            if (KitchenSettingsModel.STAGE_TYPE.equals("done")) {
+                domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
+                        + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                        + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
+                        + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+            } else if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+                domain = KitchenSettingsModel.URL + "RestTransferKitchen?compno="
+                        + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                        + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
+                        + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+
+                fillSocketOrdersToSend(point);
+            }
 
             checkSound = false;
             databaseHandler.deleteFromSocketAndCloud(point);
@@ -497,19 +544,30 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         textChecker.setText("5");
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle("Delete")
-                .setIcon(R.drawable.ic_delete_black_24dp)
+                .setIcon(R.drawable.ic_delete_white_24dp)
                 .setMessage("Are you want delete order number " + filteredOrders.get(position).get(0).getOrderNumber() + " ?")
                 .setCancelable(false)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         point = filteredOrders.get(position).get(0).getOrderNumber();
-                        domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
-                                + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
-                                + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
-                                + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+                        Log.e("stage type", KitchenSettingsModel.STAGE_TYPE);
+                        if (KitchenSettingsModel.STAGE_TYPE.equals("done")) {
+                            Log.e("stage type", "done");
+                            domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
+                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
+                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+                        } else if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+                            Log.e("stage type", "transfer");
+                            domain = KitchenSettingsModel.URL + "RestTransferKitchen?compno="
+                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
+                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+                            fillSocketOrdersToSend(filteredOrders.get(position).get(0).getOrderNumber());
+                        }
 
-                        Log.e("point" , "" + domain);
+                        Log.e("point", "" + domain);
 
                         checkSound = false;
                         databaseHandler.deleteFromSocketAndCloud(point);
@@ -528,6 +586,67 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         });
         builder.show();
 
+    }
+
+    public void fillSocketOrdersToSend(String orderNo) {
+        List<Orders> list = databaseHandler.getOrderBy(orderNo);
+        Log.e("db list", "" + list.size());
+        JSONArray jsonArray = new JSONArray();
+        for (int i = 0; i < list.size(); i++) {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("TRINDATE", list.get(i).getDateIn());
+                jsonObject.put("CASHNO", list.get(i).getCashNumber());
+                jsonObject.put("ORDERNO", list.get(i).getOrderNumber());
+                jsonObject.put("ORDERTYPE", list.get(i).getOrderType());
+                jsonObject.put("ITEMCODE", list.get(i).getItemCode());
+                jsonObject.put("ITEMNAME", list.get(i).getItemName());
+                jsonObject.put("QTY", list.get(i).getQuantity());
+                jsonObject.put("PRICE", list.get(i).getPrice());
+                jsonObject.put("POSNO", list.get(i).getPosNumber());
+                jsonObject.put("TABLENO", list.get(i).getTableNumber());
+                jsonObject.put("SECTIONNO", list.get(i).getSection());
+                jsonObject.put("ISUPDATE", list.get(i).getIsUpdated());
+//                        jsonObject.put("", "0");
+                jsonObject.put("NOTE", list.get(i).getNote());
+                jsonObject.put("STGNO", list.get(i).getStageNo());
+
+                Log.e("level", jsonObject.toString());
+
+                jsonArray.put(jsonObject);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+        sendSocketToNextStage(jsonArray);
+
+    }
+
+    public void sendSocketToNextStage(final JSONArray jsonArray) {
+        Log.e("level", "2");
+//        final Handler handler = new Handler();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    //Replace below IP with the IP of that device in which server socket open.
+                    //If you change port then change the port number in the server side code also.
+                    Socket s = new Socket(KitchenSettingsModel.IP_OF_RECEIVER, 9002);
+                    OutputStream out = s.getOutputStream();
+                    PrintWriter output = new PrintWriter(out);
+                    output.println(jsonArray.toString());
+                    output.flush();
+                    output.close();
+                    out.close();
+                    s.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+        thread.start();
     }
 
     public void startServerSocket() {
@@ -607,6 +726,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                     , object.getString("ISUPDATE")
                                     , "0"
                                     , object.getString("NOTE")
+                                    , object.getInt("STGNO")
                             );
                             Log.e("socket order ", orders.getOrderNumber());
                             databaseHandler.addOrdersBySocket(orders);
@@ -641,31 +761,82 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                 public void onClick(View v) {
                     if (!TextUtils.isEmpty(passwordField.getText())) {
                         if (passwordField.getText().toString().equals("123456")) {
+
+                            radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                                @Override
+                                public void onCheckedChanged(RadioGroup group, int checkedId) {
+                                    switch (checkedId) {
+                                        case R.id.kitchen_settings_done:
+//                                            Log.e("radio", "done");
+                                            ipAddressLinear.setVisibility(View.GONE);
+                                            doneRadioButton.setChecked(true);
+                                            KitchenSettingsModel.STAGE_TYPE = "done";
+
+                                            break;
+                                        case R.id.kitchen_settings_transfer:
+//                                            Log.e("radio", "transfer");
+                                            ipAddressLinear.setVisibility(View.VISIBLE);
+                                            transferRadioButton.setChecked(true);
+                                            KitchenSettingsModel.STAGE_TYPE = "transfer";
+                                            break;
+                                    }
+                                }
+                            });
+
                             saveSettings.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
 
                                     if (!TextUtils.isEmpty(companyNo.getText()) && !TextUtils.isEmpty(companyYear.getText())
                                             && !TextUtils.isEmpty(posNo.getText()) && !TextUtils.isEmpty(screenNo.getText())
-                                            && !TextUtils.isEmpty(timerDuration.getText())) {
-
-                                        databaseHandler.deletekitchenSettings();
-                                        filteredOrders.clear();
-                                        orderNo.clear();
-                                        ordersList.clear();
-                                        cloudOrderList.clear();
-                                        socketOrderList.clear();
-                                        KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
-                                        KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
-                                        KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
-                                        KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
-                                        KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
-                                        if (KitchenSettingsModel.TIMER_DURATION.matches("[0-9]+")) {
-                                            KitchenSettingsModel.FILLED = true;
-                                            databaseHandler.addkitchenSettings();
-                                            dialog.dismiss();
-                                            finish();
-                                            startActivity(getIntent());
+                                            && !TextUtils.isEmpty(timerDuration.getText()) && !TextUtils.isEmpty(getOrdersURL.getText())
+                                            && !TextUtils.isEmpty(stageNo.getText())) {
+                                        if (timerDuration.getText().toString().matches("[0-9]+")) {
+                                            if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+                                                if (!TextUtils.isEmpty(ipAddressForReceiver.getText().toString())) {
+                                                    databaseHandler.deletekitchenSettings();
+                                                    filteredOrders.clear();
+                                                    orderNo.clear();
+                                                    ordersList.clear();
+                                                    cloudOrderList.clear();
+                                                    socketOrderList.clear();
+                                                    KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
+                                                    KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
+                                                    KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
+                                                    KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
+                                                    KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
+                                                    KitchenSettingsModel.URL = "" + getOrdersURL.getText().toString();
+                                                    KitchenSettingsModel.STAGE_NO = "" + stageNo.getText().toString();
+                                                    KitchenSettingsModel.IP_OF_RECEIVER = "" + ipAddressForReceiver.getText().toString();
+                                                    KitchenSettingsModel.FILLED = true;
+                                                    databaseHandler.addkitchenSettings();
+                                                    dialog.dismiss();
+                                                    finish();
+                                                    startActivity(getIntent());
+                                                } else {
+                                                    Toast.makeText(MainActivity.this, "Please fill empty fields!", Toast.LENGTH_SHORT).show();
+                                                }
+                                            } else { // done
+                                                databaseHandler.deletekitchenSettings();
+                                                filteredOrders.clear();
+                                                orderNo.clear();
+                                                ordersList.clear();
+                                                cloudOrderList.clear();
+                                                socketOrderList.clear();
+                                                KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
+                                                KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
+                                                KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
+                                                KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
+                                                KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
+                                                KitchenSettingsModel.URL = "" + getOrdersURL.getText().toString();
+                                                KitchenSettingsModel.STAGE_NO = "" + stageNo.getText().toString();
+                                                KitchenSettingsModel.IP_OF_RECEIVER = "no address";
+                                                KitchenSettingsModel.FILLED = true;
+                                                databaseHandler.addkitchenSettings();
+                                                dialog.dismiss();
+                                                finish();
+                                                startActivity(getIntent());
+                                            }
                                         } else {
                                             timerDuration.setError("Characters and symbols \n are not valid!");
                                         }
@@ -704,12 +875,12 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //                                                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
 //                                                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(i).get(0).getOrderNumber()
 //                                                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO
-                                                            String  domain = KitchenSettingsModel.URL +"UpdateRestKitchenScreen?compno="
+                                                            String domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
                                                                     + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                                                                     + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(i).get(0).getOrderNumber()
                                                                     + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(i).get(0).getCashNumber();
 
-                                                            Log.e("clean kitchen",""+domain);
+                                                            Log.e("clean kitchen", "" + domain);
 
                                                             presenter.updateOrdersRequest(domain);
                                                         }

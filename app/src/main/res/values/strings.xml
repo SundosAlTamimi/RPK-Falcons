@@ -20,6 +20,12 @@
     <string name="pos_no">POS No</string>
     <string name="Screen_no">Screen No</string>
     <string name="timer_duration">Timer (second)</string>
+    <string name="stage_type">Stage Type</string>
+    <string name="done">Done</string>
+    <string name="transfer">Transfer</string>
+    <string name="ip_address">IP Address(Receiver)</string>
+    <string name="stage_no">Stage No</string>
+    <string name="url">URL</string>
 
     <string name="save">Save</string>
     <string name="clean_kitchen">Clean Kitchen</string>

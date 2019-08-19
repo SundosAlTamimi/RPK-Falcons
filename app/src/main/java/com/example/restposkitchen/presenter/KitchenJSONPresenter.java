@@ -61,7 +61,8 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
         mainActivity.showLoading();
         urlKitchenOrders = KitchenSettingsModel.URL + "GetRestKitchenData?compno="
                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
-                + "&POSNO=" + KitchenSettingsModel.POS_NO + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+                + "&POSNO=" + KitchenSettingsModel.POS_NO + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO
+                + "&STGNO=" + KitchenSettingsModel.STAGE_NO;
 //        JSONObject jsonObject = new JSONObject();
 //        try {
 //            jsonObject.put("compno", KitchenSettingsModel.COMPANY_NO);
@@ -134,7 +135,7 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
         socketOrderList.clear();
         cloudOrderList.clear();
 
-        Log.e("length", "" + response.length());
+        Log.e("cloud orders length", "" + response.length());
         if (response.length() > 0) {
             JSONObject object;
             for (int i = 0; i < response.length(); i++) {
@@ -156,6 +157,7 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
                             , object.getString("ISUPDATE")
                             , "0"
                             , object.getString("NOTE")
+                            , object.getInt("STGNO")
                     );
                     cloudOrderList.add(orders);
 
@@ -228,7 +230,8 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
         public void onErrorResponse(VolleyError error) {
             mainActivity.dismissLoading();
             String stringError = "" + error;
-            if (!stringError.contains("voucher Update successfully.")) {
+            if (stringError.contains("STGNO Update successfully.") || stringError.contains("No Company defined, or company dosenot active."));
+            else if (!stringError.contains("voucher Update successfully.")) {
                 textChecker.setText("4");
                 Log.e("updateOrdersRequest", "" + error);
             }
@@ -261,7 +264,8 @@ public class KitchenJSONPresenter implements Response.Listener<JSONArray>, Respo
 
         urlInternetTesting = KitchenSettingsModel.URL + "GetRestKitchenData?compno="
                 + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
-                + "&POSNO=" + KitchenSettingsModel.POS_NO + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO;
+                + "&POSNO=" + KitchenSettingsModel.POS_NO + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO
+                + "&STGNO=" + KitchenSettingsModel.STAGE_NO;
 //        JSONObject jsonObject = new JSONObject();
 //        try {
 //            jsonObject.put("compno", KitchenSettingsModel.COMPANY_NO);

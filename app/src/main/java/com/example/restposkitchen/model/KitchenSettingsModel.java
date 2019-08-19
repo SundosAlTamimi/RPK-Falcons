@@ -16,6 +16,12 @@ public class KitchenSettingsModel {
 
     public static String URL = "http://falconssoft.net/RestService/FSAppServiceDLL.dll/";
 
+    public static String STAGE_TYPE = "done";
+
+    public static String IP_OF_RECEIVER = "";
+
+    public static String STAGE_NO = "";
+
 
 
 }

@@ -16,7 +16,7 @@ import java.util.List;
 public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "KitchenDatabase";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 8;
     static SQLiteDatabase database;
 
     // ==================================================================================================================
@@ -27,6 +27,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String SETTINGS_POS = "SETTINGS_POS";
     private static final String SCREEN_NO = "SCREEN_NO";
     private static final String TIMER_DURATION = "TIMER_DURATION";
+    private static final String IP_ADDRESS = "IP_ADDRESS";
+    private static final String STAGE_TYPE = "STAGE_TYPE";
+    private static final String STAGE_NO = "STAGE_NO";
+    private static final String URL = "URL";
+
 
     // ==================================================================================================================
     private static final String BINDING_ORDERS_TABLE = "BINDING_ORDERS";
@@ -50,6 +55,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String IS_UPDATED = "IS_UPDATED";
     private static final String DONE = "DONE";
     private static final String NOTE = "NOTE";
+    private static final String STGNO = "STGNO";
+
 
     // ==================================================================================================================
     private static final String SOCKET_TABLE = "SOCKET";
@@ -68,6 +75,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String SOCKET_IS_UPDATED = "IS_UPDATED";
     private static final String SOCKET_DONE = "DONE";
     private static final String SOCKET_NOTE = "NOTE";
+    private static final String SOCKET_STGNO = "STGNO";
 
     // ==================================================================================================================
 
@@ -89,7 +97,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 + COMPANY_YEAR + " TEXT,"
                 + SETTINGS_POS + " TEXT,"
                 + SCREEN_NO + " TEXT,"
-                + TIMER_DURATION + " TEXT" + ")";
+                + TIMER_DURATION + " TEXT,"
+                + IP_ADDRESS + " TEXT,"
+                + STAGE_NO + " TEXT,"
+                + URL + " TEXT,"
+                + STAGE_TYPE + " TEXT"+")";
         db.execSQL(CREATE_TABLE_SETTINGS);
 
         String CREATE_BINDING_ORDERS = "CREATE TABLE IF NOT EXISTS " + BINDING_ORDERS_TABLE + "(" + BINDING_ORDER_NO + " TEXT)";
@@ -109,7 +121,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 + SECTION + " TEXT,"
                 + IS_UPDATED + " TEXT,"
                 + DONE + " TEXT,"
-                + NOTE + " TEXT" + ")";
+                + NOTE + " TEXT,"
+                + STGNO + " INTEGER" + ")";
         db.execSQL(CREATE_TABLE_ORDERS);
 
         String CREATE_TABLE_SOCKET_ORDERS = "CREATE TABLE IF NOT EXISTS " + SOCKET_TABLE + "("
@@ -126,7 +139,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 + SOCKET_SECTION + " TEXT,"
                 + SOCKET_IS_UPDATED + " TEXT,"
                 + SOCKET_DONE + " TEXT,"
-                + SOCKET_NOTE + " TEXT" + ")";
+                + SOCKET_NOTE + " TEXT,"
+                + SOCKET_STGNO + " INTEGER" + ")";
         db.execSQL(CREATE_TABLE_SOCKET_ORDERS);
     }
 
@@ -156,6 +170,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(SETTINGS_POS, KitchenSettingsModel.POS_NO);
         values.put(SCREEN_NO, KitchenSettingsModel.SCREEN_NO);
         values.put(TIMER_DURATION, KitchenSettingsModel.TIMER_DURATION);
+        values.put(IP_ADDRESS, KitchenSettingsModel.IP_OF_RECEIVER);
+        values.put(STAGE_NO, KitchenSettingsModel.STAGE_NO);
+        values.put(URL, KitchenSettingsModel.URL);
+        values.put(STAGE_TYPE, KitchenSettingsModel.STAGE_TYPE);
 
         database.insert(SETTINGS_KITCHEN_TABLE, null, values);
     }
@@ -171,6 +189,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             KitchenSettingsModel.POS_NO = (cursor.getString(2));
             KitchenSettingsModel.SCREEN_NO = (cursor.getString(3));
             KitchenSettingsModel.TIMER_DURATION = (cursor.getString(4));
+            KitchenSettingsModel.IP_OF_RECEIVER = (cursor.getString(5));
+            KitchenSettingsModel.STAGE_NO = (cursor.getString(6));
+            KitchenSettingsModel.URL = (cursor.getString(7));
+            KitchenSettingsModel.STAGE_TYPE= (cursor.getString(8));
+
         }
 
     }
@@ -236,6 +259,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(IS_UPDATED, orders.getIsUpdated());
         values.put(DONE, orders.getDone());
         values.put(NOTE, orders.getNote());
+        values.put(STGNO, orders.getStageNo());
 
         database.insert(ORDERS_TABLE, null, values);
         database.close();
@@ -265,6 +289,40 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 orders.setIsUpdated(cursor.getString(11));
 //                orders.setDone(cursor.getString(12));
                 orders.setNote(cursor.getString(13));
+                orders.setStageNo(cursor.getInt(14));
+
+                ordersList.add(orders);
+            } while (cursor.moveToNext());
+        }
+
+        return ordersList;
+    }
+
+    public List<Orders> getOrderBy(String orderNumber){
+        List<Orders> ordersList = new ArrayList<>();
+        database = this.getWritableDatabase();
+        String selectQuery = "SELECT * FROM " + ORDERS_TABLE + " WHERE ORDER_NO = '" + orderNumber + "';";
+        Log.e("db", selectQuery);
+        Cursor cursor = database.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Orders orders = new Orders();
+                orders.setDateIn(cursor.getString(0));
+                orders.setCashNumber(cursor.getString(1));
+                orders.setOrderNumber(cursor.getString(2));
+                orders.setOrderType(cursor.getInt(3));
+                orders.setItemCode(cursor.getString(4));
+                orders.setItemName(cursor.getString(5));
+                orders.setQuantity(cursor.getInt(6));
+                orders.setPrice(cursor.getDouble(7));
+                orders.setPosNumber(cursor.getInt(8));
+                orders.setTableNumber(cursor.getInt(9));
+                orders.setSection(cursor.getString(10));
+                orders.setIsUpdated(cursor.getString(11));
+//                orders.setDone(cursor.getString(12));
+                orders.setNote(cursor.getString(13));
+                orders.setStageNo(cursor.getInt(14));
 
                 ordersList.add(orders);
             } while (cursor.moveToNext());
@@ -313,6 +371,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(SOCKET_IS_UPDATED, orders.getIsUpdated());
         values.put(SOCKET_DONE, orders.getDone());
         values.put(SOCKET_NOTE, orders.getNote());
+        values.put(SOCKET_STGNO, orders.getStageNo());
 
         database.insert(SOCKET_TABLE, null, values);
         database.close();
@@ -341,6 +400,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 orders.setIsUpdated(cursor.getString(11));
 //                orders.setDone(cursor.getString(12));
                 orders.setNote(cursor.getString(13));
+                orders.setStageNo(cursor.getInt(14));
 
                 ordersList.add(orders);
             } while (cursor.moveToNext());

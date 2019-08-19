@@ -18,6 +18,7 @@ public class Orders {
     private String note; //
     private String done;
     private String screenNo;
+    private int stageNo;
 
     private int companyNo;
     private int companyYear;
@@ -26,7 +27,7 @@ public class Orders {
     }
 
     // for data from server
-    public Orders(String dateIn, String cashNumber, String orderNumber, int orderType, String itemCode, String itemName, int quantity, double price, int posNumber, int tableNumber, String section, String isUpdated, String done, String note) {
+    public Orders(String dateIn, String cashNumber, String orderNumber, int orderType, String itemCode, String itemName, int quantity, double price, int posNumber, int tableNumber, String section, String isUpdated, String done, String note, int stageNo) {
         this.dateIn = dateIn;
         this.cashNumber = cashNumber;
         this.orderNumber = orderNumber;
@@ -41,6 +42,7 @@ public class Orders {
         this.isUpdated = isUpdated;
         this.done = done;
         this.note = note;
+        this.stageNo = stageNo;
     }
 
 //[{"QTY":2,"NOTE":"","PRICE":10,"ITEMCODE":"1111","ITEMNAME":"milk","SCREENNO":1,"ISUPDATE":0}]
@@ -197,5 +199,13 @@ public class Orders {
 
     public void setScreenNo(String screenNo) {
         this.screenNo = screenNo;
+    }
+
+    public int getStageNo() {
+        return stageNo;
+    }
+
+    public void setStageNo(int stageNo) {
+        this.stageNo = stageNo;
     }
 }
