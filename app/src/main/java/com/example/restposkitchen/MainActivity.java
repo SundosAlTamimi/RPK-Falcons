@@ -51,6 +51,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements View.OnDragListener, View.OnClickListener {//implements View.OnTouchListener {
 
@@ -794,25 +796,36 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                         if (timerDuration.getText().toString().matches("[0-9]+")) {
                                             if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
                                                 if (!TextUtils.isEmpty(ipAddressForReceiver.getText().toString())) {
-                                                    databaseHandler.deletekitchenSettings();
-                                                    filteredOrders.clear();
-                                                    orderNo.clear();
-                                                    ordersList.clear();
-                                                    cloudOrderList.clear();
-                                                    socketOrderList.clear();
-                                                    KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
-                                                    KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
-                                                    KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
-                                                    KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
-                                                    KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
-                                                    KitchenSettingsModel.URL = "" + getOrdersURL.getText().toString();
-                                                    KitchenSettingsModel.STAGE_NO = "" + stageNo.getText().toString();
-                                                    KitchenSettingsModel.IP_OF_RECEIVER = "" + ipAddressForReceiver.getText().toString();
-                                                    KitchenSettingsModel.FILLED = true;
-                                                    databaseHandler.addkitchenSettings();
-                                                    dialog.dismiss();
-                                                    finish();
-                                                    startActivity(getIntent());
+                                                    final Pattern IP_ADDRESS = Pattern.compile("((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(25[0-5]|2[0-4]"
+                                                            + "[0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]"
+                                                            + "[0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}"
+                                                            + "|[1-9][0-9]|[0-9]))");
+                                                    Matcher matcher = IP_ADDRESS.matcher(ipAddressForReceiver.getText().toString());//"127.0.0.1"
+                                                    if (matcher.matches()) {
+//                                                        Log.e("pattern", "true");
+                                                        databaseHandler.deletekitchenSettings();
+                                                        filteredOrders.clear();
+                                                        orderNo.clear();
+                                                        ordersList.clear();
+                                                        cloudOrderList.clear();
+                                                        socketOrderList.clear();
+                                                        KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
+                                                        KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
+                                                        KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
+                                                        KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
+                                                        KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
+                                                        KitchenSettingsModel.URL = "" + getOrdersURL.getText().toString();
+                                                        KitchenSettingsModel.STAGE_NO = "" + stageNo.getText().toString();
+                                                        KitchenSettingsModel.IP_OF_RECEIVER = "" + ipAddressForReceiver.getText().toString();
+                                                        KitchenSettingsModel.FILLED = true;
+                                                        databaseHandler.addkitchenSettings();
+                                                        dialog.dismiss();
+                                                        finish();
+                                                        startActivity(getIntent());
+                                                    } else {
+//                                                        Log.e("pattern", "false");
+                                                        Toast.makeText(MainActivity.this, "Invalid input!", Toast.LENGTH_SHORT).show();
+                                                    }
                                                 } else {
                                                     Toast.makeText(MainActivity.this, "Please fill empty fields!", Toast.LENGTH_SHORT).show();
                                                 }
