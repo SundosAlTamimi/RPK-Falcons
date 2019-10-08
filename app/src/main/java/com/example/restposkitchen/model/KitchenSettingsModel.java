@@ -22,6 +22,10 @@ public class KitchenSettingsModel {
 
     public static String STAGE_NO = "";
 
+    public static int PORT_NO = 9100;
+
+    public static int FLAG = 0;
+
 
 
 }

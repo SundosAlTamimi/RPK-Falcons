@@ -80,7 +80,7 @@ public class OrdersAdapter extends BaseAdapter {
                 sectionTextView.setText("---");
                 orderTypeImage.setImageResource(R.drawable.take_away_hover);
                 orderTypeTextView.setText(" Take Away ");
-            } else {
+            } else { //1
                 tableNoTextView.setText("" + filteredOrders.get(position).get(0).getTableNumber());
                 sectionTextView.setText("" + filteredOrders.get(position).get(0).getSection());
                 orderTypeImage.setImageResource(R.drawable.dine_in_hover);

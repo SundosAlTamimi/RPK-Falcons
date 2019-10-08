@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">RestPosKitchen</string>
+    <string name="app_name">Kitchen</string>
 
     <string name="order_number">رقم الطلب: </string>
     <string name="order_type">نوع الطلب</string>
@@ -23,12 +23,13 @@
     <string name="Screen_no">رقم الشاشة</string>
     <string name="timer_duration">المؤقت(ثانية)</string>
     <string name="stage_type">نوع المنصّة</string>
-    <string name="done">غير انتقالي</string>
-    <string name="transfer">انتقالي</string>
     <string name="ip_address">عنوان IP للجهاز المستقبل</string>
     <string name="stage_no">رقم المنصّة</string>
     <string name="url">URL</string>
+    <string name="transfer">انتقالي</string>
 
+    <string name="print">طباعة</string>
+    <string name="done">غير انتقالي</string>
     <string name="save">حفظ</string>
     <string name="clean_kitchen">مسح الطلبات</string>
     <string name="cancel">الغاء</string>

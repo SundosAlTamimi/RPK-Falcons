@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -37,6 +38,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -91,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
     private Dialog dialog, passwordDialog;
     private EditText companyNo, companyYear, posNo, screenNo, timerDuration, passwordField, ipAddressForReceiver, stageNo, getOrdersURL;
     private RadioGroup radioGroup;
-    private RadioButton doneRadioButton, transferRadioButton;
+    private RadioButton doneRadioButton, transferRadioButton, printRadioButton;
     private Button saveSettings, cleanKitchen, cancelSettings, checkPassword;
     private LinearLayout stageNoLinear, ipAddressLinear;
 
@@ -126,7 +129,13 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                 transferRadioButton.setChecked(true);
                 ipAddressForReceiver.setText(KitchenSettingsModel.IP_OF_RECEIVER);
 
-            } else {
+            } else if (KitchenSettingsModel.STAGE_TYPE.equals("print")) {
+//                Log.e("check", "transfer");
+                ipAddressLinear.setVisibility(View.VISIBLE);
+                printRadioButton.setChecked(true);
+                ipAddressForReceiver.setText(KitchenSettingsModel.IP_OF_RECEIVER);
+
+            } else if (KitchenSettingsModel.STAGE_TYPE.equals("done")) {
 //                Log.e("check", "done");
                 ipAddressLinear.setVisibility(View.GONE);
                 doneRadioButton.setChecked(true);
@@ -240,12 +249,12 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         radioGroup = dialog.findViewById(R.id.kitchen_settings_radioGroup);
         doneRadioButton = dialog.findViewById(R.id.kitchen_settings_done);
         transferRadioButton = dialog.findViewById(R.id.kitchen_settings_transfer);
+        printRadioButton = dialog.findViewById(R.id.kitchen_settings_print);
         ipAddressForReceiver = dialog.findViewById(R.id.kitchen_settings_IP_address);
         stageNo = dialog.findViewById(R.id.kitchen_settings_stageNo);
         getOrdersURL = dialog.findViewById(R.id.kitchen_settings_url);
         stageNoLinear = dialog.findViewById(R.id.kitchen_settings_stageNo_linear);
         ipAddressLinear = dialog.findViewById(R.id.kitchen_settings_IP_linear);
-
         saveSettings = dialog.findViewById(R.id.kitchen_settings_save);
         cleanKitchen = dialog.findViewById(R.id.kitchen_settings_clean_kitchen);
         cancelSettings = dialog.findViewById(R.id.kitchen_settings_cancel);
@@ -347,8 +356,8 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         socketOrderList = databaseHandler.getOrdersFromSocket();
         cloudOrderList = databaseHandler.getOrders();
 
-        Log.e("socket size:", "" + socketOrderList.size());
-        Log.e("cloud size:", "" + cloudOrderList.size());
+//        Log.e("socket size:", "" + socketOrderList.size());
+//        Log.e("cloud size:", "" + cloudOrderList.size());
 
         if (socketOrderList.size() != 0 && cloudOrderList.size() != 0) {
             for (int i = 0; i < cloudOrderList.size(); i++) {
@@ -519,11 +528,21 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                         + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                         + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
                         + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
-            } else if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+            } else if (KitchenSettingsModel.STAGE_TYPE.equals("transfer") || KitchenSettingsModel.STAGE_TYPE.equals("print")) {
+
+                if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+                    KitchenSettingsModel.PORT_NO = 9002;
+                    KitchenSettingsModel.FLAG = 1;
+                } else if (KitchenSettingsModel.STAGE_TYPE.equals("print")) {
+                    KitchenSettingsModel.PORT_NO = 9100;
+                    KitchenSettingsModel.FLAG = 2;
+                }
+
                 domain = KitchenSettingsModel.URL + "RestTransferKitchen?compno="
                         + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                         + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
                         + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
+
 
                 fillSocketOrdersToSend(point);
             }
@@ -534,14 +553,14 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             filteredOrders.remove(filteredOrders.get(position));
             hideDeleteOrders();
             Toast.makeText(this, "item deleted", Toast.LENGTH_SHORT).show();
-            Log.e("item ", " deleted");
+//            Log.e("item ", " deleted");
             textChecker.setText("3");
         }
         return true;
     }
 
     public void deleteKitchenOrder(final int position) {
-        Log.e("item ", " respo");
+//        Log.e("item ", " respo");
 
         textChecker.setText("5");
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
@@ -560,8 +579,16 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                     + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                                     + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
                                     + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(position).get(0).getCashNumber();
-                        } else if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
-                            Log.e("stage type", "transfer");
+                        } else if (KitchenSettingsModel.STAGE_TYPE.equals("transfer") || KitchenSettingsModel.STAGE_TYPE.equals("print")) {
+                            Log.e("stage type", KitchenSettingsModel.STAGE_TYPE);
+                            if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+                                KitchenSettingsModel.PORT_NO = 9002;
+                                KitchenSettingsModel.FLAG = 1;
+                            } else if (KitchenSettingsModel.STAGE_TYPE.equals("print")) {
+                                KitchenSettingsModel.PORT_NO = 9100;
+                                KitchenSettingsModel.FLAG = 2;
+                            }
+
                             domain = KitchenSettingsModel.URL + "RestTransferKitchen?compno="
                                     + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
                                     + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + point
@@ -569,14 +596,14 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                             fillSocketOrdersToSend(filteredOrders.get(position).get(0).getOrderNumber());
                         }
 
-                        Log.e("point", "" + domain);
+//                        Log.e("point", "" + domain);
 
                         checkSound = false;
                         databaseHandler.deleteFromSocketAndCloud(point);
                         presenter.updateOrdersRequest(domain);
                         filteredOrders.remove(filteredOrders.get(position));
                         Toast.makeText(MainActivity.this, "item deleted", Toast.LENGTH_SHORT).show();
-                        Log.e("item ", " deleted");
+//                        Log.e("item ", " deleted");
                         textChecker.setText("3");
                     }
                 });
@@ -592,7 +619,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
     public void fillSocketOrdersToSend(String orderNo) {
         List<Orders> list = databaseHandler.getOrderBy(orderNo);
-        Log.e("db list", "" + list.size());
+//        Log.e("db list", "" + list.size());
         JSONArray jsonArray = new JSONArray();
         for (int i = 0; i < list.size(); i++) {
             JSONObject jsonObject = new JSONObject();
@@ -613,7 +640,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                 jsonObject.put("NOTE", list.get(i).getNote());
                 jsonObject.put("STGNO", list.get(i).getStageNo());
 
-                Log.e("level", jsonObject.toString());
+//                Log.e("level", jsonObject.toString());
 
                 jsonArray.put(jsonObject);
             } catch (JSONException e) {
@@ -634,15 +661,57 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                 try {
                     //Replace below IP with the IP of that device in which server socket open.
                     //If you change port then change the port number in the server side code also.
-                    Socket s = new Socket(KitchenSettingsModel.IP_OF_RECEIVER, 9002);
+                    Socket s = new Socket(KitchenSettingsModel.IP_OF_RECEIVER, KitchenSettingsModel.PORT_NO);
                     OutputStream out = s.getOutputStream();
                     PrintWriter output = new PrintWriter(out);
-                    output.println(jsonArray.toString());
+                    if (KitchenSettingsModel.FLAG == 1) {// transfer
+                        output.println(jsonArray.toString());
+                    } else if (KitchenSettingsModel.FLAG == 2) { // print
+                        String orderType, tableNo, sectionNo;
+                        if (jsonArray.getJSONObject(0).getInt("ORDERTYPE") == 0){
+                            orderType = "Take Away";
+                            tableNo ="---";
+                            sectionNo ="---";
+                        }
+                        else{
+                            orderType = "Dine In";
+                            tableNo = "" + jsonArray.getJSONObject(0).getInt("TABLENO");
+                            sectionNo =jsonArray.getJSONObject(0).getString("SECTIONNO");
+                        }
+
+                        String orderString = "Order: " + jsonArray.getJSONObject(0).getString("ORDERNO")
+                                + " / " + orderType
+                                + "\nTable No: " + tableNo
+                                + "\nSection No: " + sectionNo
+                                + "\n-----------------------------"
+                                + "\nitem               qty     note\n"
+                                + "-----------------------------\n";
+                        for (int m = 0; m < jsonArray.length(); m++) {
+                            JSONObject orderObject = jsonArray.getJSONObject(m);
+                            String name = orderObject.getString("ITEMNAME");
+                            String qty = String.valueOf(orderObject.getInt("QTY"));
+                            while (name.length() < 20) {
+                                name += " ";
+                            }
+                            while (qty.length() < 8) {
+                                qty += " ";
+                            }
+                            orderString += name
+                                    + qty
+                                    + orderObject.getString("NOTE")
+                                    + "\n";
+                        }
+
+                        orderString += "\n\n\n";
+                        output.println(orderString);
+                    }
                     output.flush();
                     output.close();
                     out.close();
                     s.close();
                 } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
@@ -651,8 +720,17 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         thread.start();
     }
 
-    public void startServerSocket() {
+    public void makeSpace(String name, String qty) {
+        while (name.length() < 21) {
+            name += "";
+        }
+        while (qty.length() < 21) {
+            qty += "";
+        }
 
+    }
+
+    public void startServerSocket() {
         Thread thread = new Thread(new Runnable() {
             private String stringData = null;
 
@@ -669,7 +747,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
                         stringData = input.readLine();
                         if (stringData != null) {
-                            Log.e("socket ", "is worked");
+//                            Log.e("socket ", "is worked");
 //                            output.println(stringData);
 //                            output.flush();
                             filterSocketAndServerOrders(stringData);
@@ -781,6 +859,12 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                             transferRadioButton.setChecked(true);
                                             KitchenSettingsModel.STAGE_TYPE = "transfer";
                                             break;
+                                        case R.id.kitchen_settings_print:
+//                                            Log.e("radio", "transfer");
+                                            ipAddressLinear.setVisibility(View.VISIBLE);
+                                            printRadioButton.setChecked(true);
+                                            KitchenSettingsModel.STAGE_TYPE = "print";
+                                            break;
                                     }
                                 }
                             });
@@ -794,7 +878,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                             && !TextUtils.isEmpty(timerDuration.getText()) && !TextUtils.isEmpty(getOrdersURL.getText())
                                             && !TextUtils.isEmpty(stageNo.getText())) {
                                         if (timerDuration.getText().toString().matches("[0-9]+")) {
-                                            if (KitchenSettingsModel.STAGE_TYPE.equals("transfer")) {
+                                            if (KitchenSettingsModel.STAGE_TYPE.equals("transfer") || KitchenSettingsModel.STAGE_TYPE.equals("print")) {
                                                 if (!TextUtils.isEmpty(ipAddressForReceiver.getText().toString())) {
                                                     final Pattern IP_ADDRESS = Pattern.compile("((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(25[0-5]|2[0-4]"
                                                             + "[0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]"

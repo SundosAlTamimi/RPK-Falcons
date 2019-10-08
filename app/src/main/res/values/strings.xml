@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RestPosKitchen</string>
+    <string name="app_name">Kitchen</string>
 
     <string name="order_number">Order No : </string>
     <string name="order_type">Order type</string>
@@ -21,12 +21,13 @@
     <string name="Screen_no">Screen No</string>
     <string name="timer_duration">Timer (second)</string>
     <string name="stage_type">Stage Type</string>
-    <string name="done">Done</string>
     <string name="transfer">Transfer</string>
     <string name="ip_address">IP Address(Receiver)</string>
     <string name="stage_no">Stage No</string>
     <string name="url">URL</string>
 
+    <string name="print">Print</string>
+    <string name="done">Done</string>
     <string name="save">Save</string>
     <string name="clean_kitchen">Clean Kitchen</string>
     <string name="cancel">Cancel</string>
