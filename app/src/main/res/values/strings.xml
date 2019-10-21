@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Kitchen</string>
+    <string name="app_lang">App Language</string>
+    <string name="arabic">ع</string>
+    <string name="english">en</string>
 
     <string name="order_number">Order No : </string>
     <string name="order_type">Order type</string>

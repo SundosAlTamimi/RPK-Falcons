@@ -24,7 +24,9 @@ public class KitchenSettingsModel {
 
     public static int PORT_NO = 9100;
 
-    public static int FLAG = 0;
+    public static int FLAG = 0;// 1 => transfer / 2 => print
+
+    public static String LANGUAGE = "en";// 0 => en // 1 => arabic
 
 
 

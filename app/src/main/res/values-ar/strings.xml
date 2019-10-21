@@ -2,11 +2,14 @@
 <resources>
 
     <string name="app_name">Kitchen</string>
+    <string name="app_lang">لغة التطبيق</string>
+    <string name="arabic">ع</string>
+    <string name="english">en</string>
 
-    <string name="order_number">رقم الطلب: </string>
+    <string name="order_number">رقم الطلب </string>
     <string name="order_type">نوع الطلب</string>
-    <string name="table_number">رقم الطاولة: </string>
-    <string name="section_number">رقم القسم: </string>
+    <string name="table_number">رقم الطاولة </string>
+    <string name="section_number">رقم القسم </string>
     <string name="item_name">اسم المادة</string>
     <string name="quantity">الكمية</string>
     <string name="note">ملاحظات</string>
@@ -15,7 +18,7 @@
     <string name="take_away">طلب سفري</string>
     <string name="title_activity_handy_testing">HandyTestingActivity</string>
 
-    <string name="enter_password">ادخل الرقم السري</string>
+    <string name="enter_password">الرقم السري</string>
 
     <string name="company_no">رقم الشركة</string>
     <string name="company_year">السنة(الشركة)</string>

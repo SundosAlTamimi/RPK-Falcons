@@ -1,3 +1,233 @@
+
+<TableLayout
+        android:orientation="horizontal"
+        android:layout_width="460dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+       >
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+             >
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="الكمية"
+                android:textColor="@color/text_color"
+                android:textSize="18sp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="1dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="ملاحظات"
+            android:textColor="@color/text_color"
+            android:textSize="18sp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="المادة"
+                android:textColor="@color/text_color"
+                android:textSize="18sp"/>
+
+        </TableRow>
+    </TableLayout>
+
+    <View
+        android:layout_width="460dp"
+        android:layout_height="1dp"
+        android:layout_marginHorizontal="5dp"
+        android:background="@color/text_color" />
+
+************************************************************************************************
+                            mHandler = new Handler(Looper.getMainLooper()) {
+                                @Override
+                                public void handleMessage(Message message) {
+                                    // This is where you do your work in the UI thread.
+                                    // Your worker tells you in the message what to do.
+
+                                    try {
+                                        final Dialog dialog = new Dialog(getApplicationContext());
+                                        dialog.setContentView(R.layout.print_container_layout);
+//                            LinearLayout linearLayout = convertView.findViewById(R.id.orders_row_layout_container);
+                                        LinearLayout linearLayout = dialog.findViewById(R.id.print_container_parent);
+                                        TableLayout tableContainer = dialog.findViewById(R.id.print_container_table_container);
+                                        TextView orderNoTextView = dialog.findViewById(R.id.print_container_order_no);
+                                        TextView tableNoTextView = dialog.findViewById(R.id.print_container_table_no);
+                                        TextView sectionTextView = dialog.findViewById(R.id.print_container_section_no);
+                                        TextView orderTypeTextView = dialog.findViewById(R.id.print_container_orderType);
+//                            ImageView orderTypeImage = convertView.findViewById(R.id.orderRow_orderType_image);
+//                            TextView updatedOrder = convertView.findViewById(R.id.orderRow_isUpdated);
+//                            ImageButton deleteOrder = convertView.findViewById(R.id.orderRow_delete_order);
+
+                                        String orderType, tableNo, sectionNo;
+                                        if (jsonArray.getJSONObject(0).getInt("ORDERTYPE") == 0) {
+                                            orderType = "سفري";
+                                            tableNo = "-";
+                                            sectionNo = "-";
+                                        } else {
+                                            orderType = "طاولة";
+                                            tableNo = "" + jsonArray.getJSONObject(0).getInt("TABLENO");
+                                            sectionNo = jsonArray.getJSONObject(0).getString("SECTIONNO");
+                                        }
+
+                                        orderNoTextView.setText("" + jsonArray.getJSONObject(0).getString("ORDERNO"));
+                                        orderTypeTextView.setText(orderType);
+                                        tableNoTextView.setText(tableNo);
+                                        sectionTextView.setText(sectionNo);
+
+                                        for (int m = 0; m < jsonArray.length(); m++) {
+                                            JSONObject orderObject = jsonArray.getJSONObject(m);
+                                            String name = orderObject.getString("ITEMNAME");
+                                            String qty = String.valueOf(orderObject.getInt("QTY"));
+//                                while (name.length() < 20) {
+//                                    name += " ";
+//                                }
+//                                while (qty.length() < 8) {
+//                                    qty += " ";
+//                                }
+                                            TableRow itemRow = new TableRow(MainActivity.this);
+                                            TextView textView = new TextView(MainActivity.this);
+                                            textView.setText(orderObject.getString("NOTE") + qty + name);
+                                            itemRow.addView(textView);
+                                            tableContainer.addView(itemRow);
+//                                orderString += name
+//                                        + qty
+//                                        + orderObject.getString("NOTE")
+//                                        + "\n";
+                                        }
+
+                                        linearLayout.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                                                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                                        linearLayout.layout(0, 0, linearLayout.getMeasuredWidth(), linearLayout.getMeasuredHeight());
+
+//                            Bitmap bitmap = Bitmap.createBitmap(linearLayout.getWidth(), linearLayout.getHeight(), Bitmap.Config.ARGB_8888);
+//                            Canvas canvas = new Canvas(bitmap);
+//                            linearLayout.draw(canvas);
+
+//                            orderString += "\n\n\n";
+//                            output.println(orderString);
+//                            output.flush();
+
+//                            String orderString = " الطلب " + jsonArray.getJSONObject(0).getString("ORDERNO")
+//                                    + " / " + orderType
+//                                    + "\n"+ " رقم الطاولة " + tableNo
+//                                    + "\n" + " القسم " + sectionNo
+//                                    + "\n__________________________________";
+////                                    + "\nالمادة       الكمية     ملاحظات\n"
+////                                    + "__________________________________\n";
+
+//                            Log.e("test", orderString);
+//                            TextPaint tp = new TextPaint();
+//                            tp.setTextSize(30);
+//                            tp.setFakeBoldText(true);
+//                            int width = (int) tp.measureText(linearLayout) + 10;
+//                            int height = (int) tp.measureText(linearLayout);
+                                        Bitmap bitmap = Bitmap.createBitmap(linearLayout.getWidth(), linearLayout.getHeight(), Bitmap.Config.ARGB_8888);
+                                        Canvas canvas = new Canvas(bitmap);
+//                            canvas.drawText(orderString, 0, height / 2, tp);
+                                        printPic = PrintPic.getInstance();
+                                        printPic.init(bitmap);
+                                        byte[] bitmapdata = printPic.printDraw();
+                                        out.write(bitmapdata);
+                                        out.flush();
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            };
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+ <View
+            android:layout_width="1dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginLeft="1dp"
+            android:layout_marginEnd="1dp"
+            android:layout_marginRight="1dp"
+            android:layout_marginTop="2dp"
+            android:background="@color/black" />
+
+<GridView
+        android:id="@+id/gridView_dnd_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:horizontalSpacing="25dp"
+        android:layout_marginTop="40dp"
+        android:numColumns="3"
+        android:paddingLeft="25dp"
+        android:paddingTop="25dp"
+        android:paddingRight="50dp"
+        android:paddingBottom="25dp"
+        android:scrollbars="vertical"
+        android:verticalSpacing="25dp" />
+
+ <LinearLayout
+         android:layout_width="wrap_content"
+         android:layout_height="100dp"
+         android:layout_alignParentStart="true"
+         android:layout_alignParentLeft="true"
+         android:layout_alignParentTop="true"
+         android:layout_alignParentEnd="true"
+         android:layout_alignParentRight="true"
+         android:layout_alignParentBottom="true"
+         android:layout_marginStart="3dp"
+         android:layout_marginLeft="3dp"
+         android:layout_marginTop="6dp"
+         android:layout_marginEnd="505dp"
+         android:layout_marginRight="505dp"
+         android:layout_marginBottom="975dp"
+         android:background="@drawable/focused_table"
+         android:orientation="horizontal">
+
+         <TextView
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_marginEnd="1dp"
+             android:layout_marginRight="1dp"
+             android:fontFamily="serif"
+             android:padding="10dp"
+             android:text="@string/english"
+             android:textSize="15sp" />
+
+         <View
+             android:layout_width="2dp"
+             android:layout_height="50dp"
+             android:background="@color/black" />
+
+         <TextView
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:fontFamily="serif"
+             android:padding="10dp"
+             android:text="@string/arabic"
+             android:textSize="15sp" />
+
+     </LinearLayout>
+
+*****************************************************************************************************************************************
+
  for (int m = 0; m < jsonArray.length(); m++) {
                             JSONObject orderObject = jsonArray.getJSONObject(m);
                             String name = orderObject.getString("ITEMNAME");
@@ -13,3 +243,33 @@
                                     + orderObject.getString("NOTE")
                                     + "\n";
                         }
+
+*********************************************************** OPEN CASH DRAWER & PRINT **************************************************
+
+ Thread thread = new Thread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public void run() {
+                try {
+                    //Replace below IP with the IP of that device in which server socket open.
+                    //If you change port then change the port number in the server side code also.
+                    Socket s = new Socket("192.168.2.10", 9100);
+                    OutputStream out = s.getOutputStream();
+                    PrintWriter output = new PrintWriter(out);
+                    char[] open = {27, 112, 48, 10, 50}; // to open cash drawer
+                    output.println("restaurant");
+                    output.flush();
+                    output.println(open);
+                    output.flush();
+                    output.close();
+                    out.close();
+                    s.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } //catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+            }
+        });
+        thread.start();
+*****************************************************************************************************************************************

@@ -11,13 +11,54 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:horizontalSpacing="25dp"
+        android:layout_marginTop="20dp"
         android:numColumns="3"
-        android:paddingLeft="25dp"
-        android:paddingTop="25dp"
-        android:paddingRight="50dp"
+        android:paddingLeft="10dp"
+        android:paddingTop="22dp"
+        android:paddingRight="30dp"
         android:paddingBottom="25dp"
         android:scrollbars="vertical"
         android:verticalSpacing="25dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginEnd="505dp"
+        android:layout_marginRight="505dp"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/main_language_english"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="1dp"
+            android:layout_marginRight="1dp"
+            android:background="@color/cardview_dark_background"
+            android:padding="5dp"
+            android:fontFamily="serif"
+            android:textColor="@color/layer1"
+            android:text="@string/english"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/main_language_arabic"
+            android:layout_width="28dp"
+            android:layout_height="wrap_content"
+            android:background="@color/cardview_dark_background"
+            android:padding="5dp"
+            android:textColor="@color/layer1"
+            android:gravity="center"
+            android:fontFamily="serif"
+            android:text="@string/arabic"
+            android:textSize="15sp" />
+
+    </LinearLayout>
 
     <ImageButton
         android:id="@+id/orders_list_delete_button"

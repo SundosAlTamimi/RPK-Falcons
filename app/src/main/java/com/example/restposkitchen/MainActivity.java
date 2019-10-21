@@ -1,21 +1,30 @@
 package com.example.restposkitchen;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.printservice.PrintService;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.util.Log;
 import android.view.DragEvent;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
@@ -23,9 +32,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,8 +50,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -51,39 +61,47 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.System.out;
+
 public class MainActivity extends AppCompatActivity implements View.OnDragListener, View.OnClickListener {//implements View.OnTouchListener {
 
     //    public static TextView networkStateFollower; // check network and network state
-    public static String internetState;
-    final Handler handler = new Handler();
+//    public static String internetState;
+    public PrintPic printPic;
+    private Handler handler = new Handler();
+    Handler mHandler = new Handler();
     private ProgressDialog progressDialog;
     private MediaPlayer mediaPlayer;
     private Timer _Request_Trip_Timer;
-
-    public static ArrayList<List<Orders>> filteredOrders = new ArrayList<>();
-    private List<String> socketOrders = new ArrayList<>();
-    public static List<Orders> ordersList = new ArrayList<>();
-    public static List<Orders> socketOrderList = new ArrayList<>();
-    public static List<Orders> cloudOrderList = new ArrayList<>();
-    public static ArrayList<Integer> orderNo = new ArrayList<>();
-    public static List<String> deletedOrders = new ArrayList<>();
-    public static Set<String> orderNoWithoutDup;
-    List<String> dateSort2 = new ArrayList<>();
-    List<Integer> dateSort3 = new ArrayList<>();
-
     private DatabaseHandler databaseHandler;
     private KitchenJSONPresenter presenter;
     private GridView dndGridView;
     private OrdersAdapter adapter;
     private ImageButton deleteButton, settingsButton;
+    private TextView languageArabic, languageEnglish;
     public static TextView textChecker;
     boolean checkSound = true;
+    //    private SharedPreferences.Editor editor;
+    private SharedPreferences prefs;
+    private String LANGUAGE_SHARED_PREF = "language";
+
+    public static ArrayList<List<Orders>> filteredOrders = new ArrayList<>();
+    public static List<Orders> ordersList = new ArrayList<>();
+    public static List<Orders> socketOrderList = new ArrayList<>();
+    public static List<Orders> cloudOrderList = new ArrayList<>();
+    public static ArrayList<Integer> orderNo = new ArrayList<>();
+    public static List<String> deletedOrders = new ArrayList<>();
+    private List<String> socketOrders = new ArrayList<>();
+    private List<String> dateSort2 = new ArrayList<>();
+    //    private List<Bitmap> bitmapList = new ArrayList<>();
+    private List<String> arabicList = new ArrayList<>();
 
     private String domain, point, orderListAsString;
     private int position = 0;
@@ -226,6 +244,22 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         presenter = new KitchenJSONPresenter(this, MainActivity.this);
 
+//        prefs = getSharedPreferences(LANGUAGE_SHARED_PREF, MODE_PRIVATE);
+//        String name = prefs.getString("lang", "en");//"No name defined" is the default value.
+//        if (name.equals("en"))
+//            setAppLanguage("en");
+//        else
+//            setAppLanguage("ar");
+        arabicList.add("الطلب");
+//        arabicList.add("طاولة");
+//        arabicList.add("سفري");
+        arabicList.add("رقم الطاولة");
+        arabicList.add("القسم");
+        arabicList.add("ملاحظات  الكمي        المادة");
+//        arabicList.add("الكمية");
+//        arabicList.add("ملاحظات");
+
+
         progressDialog = new ProgressDialog(this);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.setMessage("Please Waiting...");
@@ -262,8 +296,12 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         textChecker = findViewById(R.id.main_state_checker);
 //        networkStateFollower = findViewById(R.id.main_network_follower);
 //        internetState = findViewById(R.id.main_network_follower);
+        languageArabic = findViewById(R.id.main_language_arabic);
+        languageEnglish = findViewById(R.id.main_language_english);
         settingsButton = findViewById(R.id.orders_list_settings_button);
         settingsButton.setOnClickListener(this);
+        languageEnglish.setOnClickListener(this);
+        languageArabic.setOnClickListener(this);
 
         dndGridView = findViewById(R.id.gridView_dnd_container);
         dndGridView.setNumColumns(3);
@@ -273,7 +311,6 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         deleteButton = findViewById(R.id.orders_list_delete_button);
         deleteButton.setVisibility(View.INVISIBLE);
         deleteButton.setOnDragListener(this);
-
 
     }
 
@@ -617,6 +654,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 
     }
 
+    @SuppressLint("ResourceType")
     public void fillSocketOrdersToSend(String orderNo) {
         List<Orders> list = databaseHandler.getOrderBy(orderNo);
 //        Log.e("db list", "" + list.size());
@@ -648,14 +686,146 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
             }
 
         }
-        sendSocketToNextStage(jsonArray);
+
+        if (KitchenSettingsModel.FLAG == 2 && KitchenSettingsModel.LANGUAGE.equals("ar")) {
+            Dialog dialog = new Dialog(MainActivity.this);
+            dialog.setContentView(R.layout.print_container_layout);
+
+            LinearLayout linearLayout = dialog.findViewById(R.id.print_container_parent);
+            TableLayout tableContainer = dialog.findViewById(R.id.print_container_table_container);
+            TextView orderNoTextView = dialog.findViewById(R.id.print_container_order_no);
+            TextView tableNoTextView = dialog.findViewById(R.id.print_container_table_no);
+            TextView sectionTextView = dialog.findViewById(R.id.print_container_section_no);
+            TextView orderTypeTextView = dialog.findViewById(R.id.print_container_orderType);
+
+            String orderType, tableNo, sectionNo;
+            try {
+                if (jsonArray.getJSONObject(0).getInt("ORDERTYPE") == 0) {
+                    orderType = "سفري";
+                    tableNo = "-";
+                    sectionNo = "-";
+                } else {
+                    orderType = "طاولة";
+                    tableNo = "" + jsonArray.getJSONObject(0).getInt("TABLENO");
+                    sectionNo = jsonArray.getJSONObject(0).getString("SECTIONNO");
+                }
+
+                orderNoTextView.setText("" + jsonArray.getJSONObject(0).getString("ORDERNO"));
+                orderTypeTextView.setText(orderType);
+                tableNoTextView.setText(tableNo);
+                sectionTextView.setText(sectionNo);
+
+                TableRow subjectRow = new TableRow(MainActivity.this);
+                TableRow.LayoutParams layoutParams5 = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT
+                        , TableRow.LayoutParams.WRAP_CONTENT);
+                subjectRow.setLayoutParams(layoutParams5);
+
+                TableRow.LayoutParams viewsLayoutParams1 = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT
+                        , 30, 1.0f);
+
+                TextView noteSubject = new TextView(MainActivity.this);
+                noteSubject.setText("ملاحظات");
+                noteSubject.setGravity(Gravity.CENTER);
+                noteSubject.setTextSize(18);
+                noteSubject.setLayoutParams(viewsLayoutParams1);
+                subjectRow.addView(noteSubject);
+
+                TextView qtySubject = new TextView(MainActivity.this);
+                qtySubject.setText("الكمية");
+                qtySubject.setGravity(Gravity.CENTER);
+                qtySubject.setTextSize(18);
+                qtySubject.setLayoutParams(viewsLayoutParams1);
+                subjectRow.addView(qtySubject);
+
+                TextView itemSubject = new TextView(MainActivity.this);
+                itemSubject.setText("المادة");
+                itemSubject.setGravity(Gravity.CENTER);
+                itemSubject.setTextSize(18);
+                itemSubject.setLayoutParams(viewsLayoutParams1);
+                subjectRow.addView(itemSubject);
+
+//                TableRow subjectRow2 = new TableRow(MainActivity.this);
+//                TableRow.LayoutParams layoutParams22 = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT
+//                        , TableRow.LayoutParams.WRAP_CONTENT);
+//                subjectRow2.setLayoutParams(layoutParams22);
+//
+//                TextView lineView = new TextView(MainActivity.this);
+//                lineView.setText("---------------------------------------------------------------------------------------------------------");
+//                lineView.setLayoutParams(noteLayoutParams1);
+//                subjectRow2.addView(lineView);
+
+                tableContainer.addView(subjectRow);
+//                tableContainer.addView(subjectRow2);
+
+                for (int m = 0; m < jsonArray.length(); m++) {
+                    JSONObject orderObject = jsonArray.getJSONObject(m);
+                    String name = orderObject.getString("ITEMNAME");
+                    String qty = String.valueOf(orderObject.getInt("QTY"));
+//                    while (name.length() < 40) {
+//                        name += " ";
+//                    }
+//                    name+= orderObject.getString("ITEMNAME");
+//                    while (qty.length() < 8) {
+//                        qty += " ";
+//                    }
+//                    qty += String.valueOf(orderObject.getInt("QTY"));
+
+//                    TableRow itemRow = new TableRow(MainActivity.this);
+//                    TextView nameTextView = new TextView(MainActivity.this);
+//                    nameTextView.setText(orderObject.getString("NOTE") + qty + name);
+//                    itemRow.addView(nameTextView);
+//                    tableContainer.addView(itemRow);
+
+                    TableRow itemRow = new TableRow(MainActivity.this);
+                    TableRow.LayoutParams layoutParams = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT
+                            , TableRow.LayoutParams.WRAP_CONTENT);
+                    itemRow.setLayoutParams(layoutParams);
+
+                    TableRow.LayoutParams viewsLayoutParams = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT
+                            , 50, 1.0f);
+
+                    TextView noteTextView = new TextView(MainActivity.this);
+                    noteTextView.setText(orderObject.getString("NOTE"));
+                    noteTextView.setGravity(Gravity.CENTER);
+                    noteTextView.setTextSize(18);
+                    noteTextView.setLayoutParams(viewsLayoutParams);
+                    itemRow.addView(noteTextView);
+
+                    TextView qtyTextView = new TextView(MainActivity.this);
+                    qtyTextView.setText(qty);
+                    qtyTextView.setGravity(Gravity.CENTER);
+                    qtyTextView.setTextSize(18);
+                    qtyTextView.setLayoutParams(viewsLayoutParams);
+                    itemRow.addView(qtyTextView);
+
+                    TextView nameTextView = new TextView(MainActivity.this);
+                    nameTextView.setText(name);
+                    nameTextView.setGravity(Gravity.CENTER);
+                    nameTextView.setTextSize(18);
+                    nameTextView.setLayoutParams(viewsLayoutParams);
+                    itemRow.addView(nameTextView);
+
+                    tableContainer.addView(itemRow);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+//            linearLayout.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+//                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+//            linearLayout.layout(0, 0, linearLayout.getMeasuredWidth(), linearLayout.getMeasuredHeight());
+            sendSocketToNextStage(jsonArray, linearLayout);
+
+        } else
+            sendSocketToNextStage(jsonArray, null);
 
     }
 
-    public void sendSocketToNextStage(final JSONArray jsonArray) {
-        Log.e("level", "2");
+    public void sendSocketToNextStage(final JSONArray jsonArray, final LinearLayout linearLayout2) {
+//        Log.e("level", "2");
 //        final Handler handler = new Handler();
         Thread thread = new Thread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void run() {
                 try {
@@ -664,48 +834,74 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                     Socket s = new Socket(KitchenSettingsModel.IP_OF_RECEIVER, KitchenSettingsModel.PORT_NO);
                     OutputStream out = s.getOutputStream();
                     PrintWriter output = new PrintWriter(out);
+//                    Bitmap b=StringToBitMap("رقم الطاولة");
                     if (KitchenSettingsModel.FLAG == 1) {// transfer
                         output.println(jsonArray.toString());
                     } else if (KitchenSettingsModel.FLAG == 2) { // print
-                        String orderType, tableNo, sectionNo;
-                        if (jsonArray.getJSONObject(0).getInt("ORDERTYPE") == 0){
-                            orderType = "Take Away";
-                            tableNo ="---";
-                            sectionNo ="---";
-                        }
-                        else{
-                            orderType = "Dine In";
-                            tableNo = "" + jsonArray.getJSONObject(0).getInt("TABLENO");
-                            sectionNo =jsonArray.getJSONObject(0).getString("SECTIONNO");
-                        }
-
-                        String orderString = "Order: " + jsonArray.getJSONObject(0).getString("ORDERNO")
-                                + " / " + orderType
-                                + "\nTable No: " + tableNo
-                                + "\nSection No: " + sectionNo
-                                + "\n-----------------------------"
-                                + "\nitem               qty     note\n"
-                                + "-----------------------------\n";
-                        for (int m = 0; m < jsonArray.length(); m++) {
-                            JSONObject orderObject = jsonArray.getJSONObject(m);
-                            String name = orderObject.getString("ITEMNAME");
-                            String qty = String.valueOf(orderObject.getInt("QTY"));
-                            while (name.length() < 20) {
-                                name += " ";
+                        if (KitchenSettingsModel.LANGUAGE.equals("en")) {
+//                            Toast.makeText(MainActivity.this, "Current language is English", Toast.LENGTH_SHORT).show();
+                            String orderType, tableNo, sectionNo;
+                            if (jsonArray.getJSONObject(0).getInt("ORDERTYPE") == 0) {
+                                orderType = "Take Away";
+                                tableNo = "-";
+                                sectionNo = "-";
+                            } else {
+                                orderType = "Dine In";
+                                tableNo = "" + jsonArray.getJSONObject(0).getInt("TABLENO");
+                                sectionNo = jsonArray.getJSONObject(0).getString("SECTIONNO");
                             }
-                            while (qty.length() < 8) {
-                                qty += " ";
-                            }
-                            orderString += name
-                                    + qty
-                                    + orderObject.getString("NOTE")
-                                    + "\n";
-                        }
 
-                        orderString += "\n\n\n";
-                        output.println(orderString);
+                            String orderString = "Order: " + jsonArray.getJSONObject(0).getString("ORDERNO")
+                                    + " / " + orderType
+                                    + "\nTable No: " + tableNo
+                                    + "\nSection No: " + sectionNo
+                                    + "\n__________________________________"
+                                    + "\nitem               qty     note\n"
+                                    + "__________________________________\n";
+
+                            for (int m = 0; m < jsonArray.length(); m++) {
+                                JSONObject orderObject = jsonArray.getJSONObject(m);
+                                String name = orderObject.getString("ITEMNAME");
+                                String qty = String.valueOf(orderObject.getInt("QTY"));
+                                while (name.length() < 20) {
+                                    name += " ";
+                                }
+                                while (qty.length() < 8) {
+                                    qty += " ";
+                                }
+                                orderString += name
+                                        + qty
+                                        + orderObject.getString("NOTE")
+                                        + "\n";
+                            }
+
+                            orderString += "\n\n\n";
+                            output.println(orderString);
+                            output.flush();
+                        } else if (KitchenSettingsModel.LANGUAGE.equals("ar")) {
+//
+                            LinearLayout linearLayout = linearLayout2;
+                            linearLayout.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                            linearLayout.layout(0, 0, linearLayout.getMeasuredWidth(), linearLayout.getMeasuredHeight());
+                            Bitmap bitmap = Bitmap.createBitmap(linearLayout.getWidth(), linearLayout.getHeight(), Bitmap.Config.ARGB_8888);
+                            Canvas canvas = new Canvas(bitmap);
+                            linearLayout.draw(canvas);
+//                            canvas.drawText(orderString, 0, height / 2, tp);
+                            printPic = PrintPic.getInstance();
+                            printPic.init(bitmap);
+                            byte[] bitmapdata = printPic.printDraw();
+                            out.write(bitmapdata);
+                            out.flush();
+
+                        } else
+                            Toast.makeText(MainActivity.this, "Can't determine language!", Toast.LENGTH_SHORT).show();
+//                    output.println(b);
+
                     }
-                    output.flush();
+//                    output.println("27" +'t'+"255");
+//                    output.println("27"+'p'+ '0' + "50"+ "200");
+
                     output.close();
                     out.close();
                     s.close();
@@ -720,14 +916,65 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         thread.start();
     }
 
-    public void makeSpace(String name, String qty) {
-        while (name.length() < 21) {
-            name += "";
+    public void printArabic(String text) {
+//        String text = "اهلا وسهلا";
+        // create a text paint
+        TextPaint tp = new TextPaint();
+        tp.setTextSize(40);
+        tp.setFakeBoldText(true);
+        int width = (int) tp.measureText(text) + 10;
+        int height = (int) tp.measureText(text);
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawText(text, 0, height / 2, tp);
+        PrintPic printPic = PrintPic.getInstance();
+        printPic.init(bitmap);
+        byte[] bitmapdata = printPic.printDraw();
+        try {
+            out.write(bitmapdata);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        while (qty.length() < 21) {
-            qty += "";
-        }
+        out.flush();
+    }
 
+//    public void startPainting(Bitmap bitmap, String text){
+//        Canvas canvas = new Canvas(bitmap);
+//        canvas.drawText(text, 0, height / 2, tp);
+//        PrintPic printPic = PrintPic.getInstance();
+//        printPic.init(bitmap);
+//        byte[] bitmapdata = printPic.printDraw();
+//        out.write(bitmapdata);
+//        out.flush();
+//    }
+//
+//    public List<Bitmap> convertToImage(List<String> arabicList) {
+//        bitmapList = new ArrayList<>();
+//
+//        for (int i = 0; i < arabicList.size(); i++) {
+//            String text = arabicList.get(i);
+//            // create a text paint
+//            TextPaint tp = new TextPaint();
+//            tp.setTextSize(40);
+//            tp.setFakeBoldText(true);
+//            int width = (int) tp.measureText(text) + 10;
+//            int height = (int) tp.measureText(text);
+//            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+//            bitmapList.add(bitmap);
+//        }
+//        return bitmapList;
+//    }
+
+    public Bitmap StringToBitMap(String encodedString) {
+        try {
+            Log.e("bitmap", "bitmap");
+            byte[] encodeByte = Base64.decode(encodedString, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+            return bitmap;
+        } catch (Exception e) {
+            e.getMessage();
+            return null;
+        }
     }
 
     public void startServerSocket() {
@@ -831,62 +1078,91 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
     }
 
     public void onClick(View v) {
-        if (v.getId() == R.id.orders_list_settings_button) {
-            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        switch (v.getId()) {
+            case R.id.orders_list_settings_button:
+                if (v.getId() == R.id.orders_list_settings_button) {
+                    dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 //            passwordDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-            passwordField.setText("");
+                    passwordField.setText("");
 
-            checkPassword.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (!TextUtils.isEmpty(passwordField.getText())) {
-                        if (passwordField.getText().toString().equals("123456")) {
+                    checkPassword.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (!TextUtils.isEmpty(passwordField.getText())) {
+                                if (passwordField.getText().toString().equals("123456")) {
 
-                            radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                                @Override
-                                public void onCheckedChanged(RadioGroup group, int checkedId) {
-                                    switch (checkedId) {
-                                        case R.id.kitchen_settings_done:
+                                    radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                                        @Override
+                                        public void onCheckedChanged(RadioGroup group, int checkedId) {
+                                            switch (checkedId) {
+                                                case R.id.kitchen_settings_done:
 //                                            Log.e("radio", "done");
-                                            ipAddressLinear.setVisibility(View.GONE);
-                                            doneRadioButton.setChecked(true);
-                                            KitchenSettingsModel.STAGE_TYPE = "done";
+                                                    ipAddressLinear.setVisibility(View.GONE);
+                                                    doneRadioButton.setChecked(true);
+                                                    KitchenSettingsModel.STAGE_TYPE = "done";
 
-                                            break;
-                                        case R.id.kitchen_settings_transfer:
+                                                    break;
+                                                case R.id.kitchen_settings_transfer:
 //                                            Log.e("radio", "transfer");
-                                            ipAddressLinear.setVisibility(View.VISIBLE);
-                                            transferRadioButton.setChecked(true);
-                                            KitchenSettingsModel.STAGE_TYPE = "transfer";
-                                            break;
-                                        case R.id.kitchen_settings_print:
+                                                    ipAddressLinear.setVisibility(View.VISIBLE);
+                                                    transferRadioButton.setChecked(true);
+                                                    KitchenSettingsModel.STAGE_TYPE = "transfer";
+                                                    break;
+                                                case R.id.kitchen_settings_print:
 //                                            Log.e("radio", "transfer");
-                                            ipAddressLinear.setVisibility(View.VISIBLE);
-                                            printRadioButton.setChecked(true);
-                                            KitchenSettingsModel.STAGE_TYPE = "print";
-                                            break;
-                                    }
-                                }
-                            });
+                                                    ipAddressLinear.setVisibility(View.VISIBLE);
+                                                    printRadioButton.setChecked(true);
+                                                    KitchenSettingsModel.STAGE_TYPE = "print";
+                                                    break;
+                                            }
+                                        }
+                                    });
 
-                            saveSettings.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
+                                    saveSettings.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
 
-                                    if (!TextUtils.isEmpty(companyNo.getText()) && !TextUtils.isEmpty(companyYear.getText())
-                                            && !TextUtils.isEmpty(posNo.getText()) && !TextUtils.isEmpty(screenNo.getText())
-                                            && !TextUtils.isEmpty(timerDuration.getText()) && !TextUtils.isEmpty(getOrdersURL.getText())
-                                            && !TextUtils.isEmpty(stageNo.getText())) {
-                                        if (timerDuration.getText().toString().matches("[0-9]+")) {
-                                            if (KitchenSettingsModel.STAGE_TYPE.equals("transfer") || KitchenSettingsModel.STAGE_TYPE.equals("print")) {
-                                                if (!TextUtils.isEmpty(ipAddressForReceiver.getText().toString())) {
-                                                    final Pattern IP_ADDRESS = Pattern.compile("((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(25[0-5]|2[0-4]"
-                                                            + "[0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]"
-                                                            + "[0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}"
-                                                            + "|[1-9][0-9]|[0-9]))");
-                                                    Matcher matcher = IP_ADDRESS.matcher(ipAddressForReceiver.getText().toString());//"127.0.0.1"
-                                                    if (matcher.matches()) {
+                                            if (!TextUtils.isEmpty(companyNo.getText()) && !TextUtils.isEmpty(companyYear.getText())
+                                                    && !TextUtils.isEmpty(posNo.getText()) && !TextUtils.isEmpty(screenNo.getText())
+                                                    && !TextUtils.isEmpty(timerDuration.getText()) && !TextUtils.isEmpty(getOrdersURL.getText())
+                                                    && !TextUtils.isEmpty(stageNo.getText())) {
+                                                if (timerDuration.getText().toString().matches("[0-9]+")) {
+                                                    if (KitchenSettingsModel.STAGE_TYPE.equals("transfer") || KitchenSettingsModel.STAGE_TYPE.equals("print")) {
+                                                        if (!TextUtils.isEmpty(ipAddressForReceiver.getText().toString())) {
+                                                            final Pattern IP_ADDRESS = Pattern.compile("((25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9])\\.(25[0-5]|2[0-4]"
+                                                                    + "[0-9]|[0-1][0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1]"
+                                                                    + "[0-9]{2}|[1-9][0-9]|[1-9]|0)\\.(25[0-5]|2[0-4][0-9]|[0-1][0-9]{2}"
+                                                                    + "|[1-9][0-9]|[0-9]))");
+                                                            Matcher matcher = IP_ADDRESS.matcher(ipAddressForReceiver.getText().toString());//"127.0.0.1"
+                                                            if (matcher.matches()) {
 //                                                        Log.e("pattern", "true");
+                                                                databaseHandler.deletekitchenSettings();
+                                                                filteredOrders.clear();
+                                                                orderNo.clear();
+                                                                ordersList.clear();
+                                                                cloudOrderList.clear();
+                                                                socketOrderList.clear();
+                                                                KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
+                                                                KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
+                                                                KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
+                                                                KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
+                                                                KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
+                                                                KitchenSettingsModel.URL = "" + getOrdersURL.getText().toString();
+                                                                KitchenSettingsModel.STAGE_NO = "" + stageNo.getText().toString();
+                                                                KitchenSettingsModel.IP_OF_RECEIVER = "" + ipAddressForReceiver.getText().toString();
+                                                                KitchenSettingsModel.FILLED = true;
+                                                                databaseHandler.addkitchenSettings();
+                                                                dialog.dismiss();
+                                                                finish();
+                                                                startActivity(getIntent());
+                                                            } else {
+//                                                        Log.e("pattern", "false");
+                                                                Toast.makeText(MainActivity.this, "Invalid input!", Toast.LENGTH_SHORT).show();
+                                                            }
+                                                        } else {
+                                                            Toast.makeText(MainActivity.this, "Please fill empty fields!", Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    } else { // done
                                                         databaseHandler.deletekitchenSettings();
                                                         filteredOrders.clear();
                                                         orderNo.clear();
@@ -900,126 +1176,123 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                                         KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
                                                         KitchenSettingsModel.URL = "" + getOrdersURL.getText().toString();
                                                         KitchenSettingsModel.STAGE_NO = "" + stageNo.getText().toString();
-                                                        KitchenSettingsModel.IP_OF_RECEIVER = "" + ipAddressForReceiver.getText().toString();
+                                                        KitchenSettingsModel.IP_OF_RECEIVER = "no address";
                                                         KitchenSettingsModel.FILLED = true;
                                                         databaseHandler.addkitchenSettings();
                                                         dialog.dismiss();
                                                         finish();
                                                         startActivity(getIntent());
-                                                    } else {
-//                                                        Log.e("pattern", "false");
-                                                        Toast.makeText(MainActivity.this, "Invalid input!", Toast.LENGTH_SHORT).show();
                                                     }
                                                 } else {
-                                                    Toast.makeText(MainActivity.this, "Please fill empty fields!", Toast.LENGTH_SHORT).show();
+                                                    timerDuration.setError("Characters and symbols \n are not valid!");
                                                 }
-                                            } else { // done
-                                                databaseHandler.deletekitchenSettings();
-                                                filteredOrders.clear();
-                                                orderNo.clear();
-                                                ordersList.clear();
-                                                cloudOrderList.clear();
-                                                socketOrderList.clear();
-                                                KitchenSettingsModel.COMPANY_NO = "" + companyNo.getText().toString();
-                                                KitchenSettingsModel.COMPANY_YEAR = "" + companyYear.getText().toString();
-                                                KitchenSettingsModel.POS_NO = "" + posNo.getText().toString();
-                                                KitchenSettingsModel.SCREEN_NO = "" + screenNo.getText().toString();
-                                                KitchenSettingsModel.TIMER_DURATION = "" + timerDuration.getText().toString();
-                                                KitchenSettingsModel.URL = "" + getOrdersURL.getText().toString();
-                                                KitchenSettingsModel.STAGE_NO = "" + stageNo.getText().toString();
-                                                KitchenSettingsModel.IP_OF_RECEIVER = "no address";
-                                                KitchenSettingsModel.FILLED = true;
-                                                databaseHandler.addkitchenSettings();
-                                                dialog.dismiss();
-                                                finish();
-                                                startActivity(getIntent());
-                                            }
-                                        } else {
-                                            timerDuration.setError("Characters and symbols \n are not valid!");
+
+                                            } else
+                                                Toast.makeText(MainActivity.this, "Please fill empty fields!", Toast.LENGTH_SHORT).show();
                                         }
+                                    });
 
-                                    } else
-                                        Toast.makeText(MainActivity.this, "Please fill empty fields!", Toast.LENGTH_SHORT).show();
-                                }
-                            });
+                                    cancelSettings.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            dialog.dismiss();
+                                            passwordDialog.dismiss();
+                                        }
+                                    });
 
-                            cancelSettings.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    dialog.dismiss();
-                                    passwordDialog.dismiss();
-                                }
-                            });
-
-                            cleanKitchen.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this)
-                                            .setIcon(R.drawable.ic_warning_black_24dp)
-                                            .setTitle("Attention!")
-                                            .setMessage("Are you sure you want to clean the kitchen? \n this will lead to lose the data!!")
-                                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    databaseHandler.deleteAllOrders();
-                                                    databaseHandler.deleteAllFromSocketOrders();
+                                    cleanKitchen.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this)
+                                                    .setIcon(R.drawable.ic_warning_black_24dp)
+                                                    .setTitle("Attention!")
+                                                    .setMessage("Are you sure you want to clean the kitchen? \n this will lead to lose the data!!")
+                                                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            databaseHandler.deleteAllOrders();
+                                                            databaseHandler.deleteAllFromSocketOrders();
 //                                                    databaseHandler.deleteAllBindingOrders();
 
-                                                    if (filteredOrders.size() != 0) {
-                                                        for (int i = 0; i < filteredOrders.size(); i++) {
+                                                            if (filteredOrders.size() != 0) {
+                                                                for (int i = 0; i < filteredOrders.size(); i++) {
 
 //                                                            "http://10.0.0.16:8080/WSKitchenScreen/FSAppServiceDLL.dll/UpdateRestKitchenScreen?compno="
 //                                                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
 //                                                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(i).get(0).getOrderNumber()
 //                                                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO
-                                                            String domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
-                                                                    + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
-                                                                    + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(i).get(0).getOrderNumber()
-                                                                    + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(i).get(0).getCashNumber();
+                                                                    String domain = KitchenSettingsModel.URL + "UpdateRestKitchenScreen?compno="
+                                                                            + KitchenSettingsModel.COMPANY_NO + "&compyear=" + KitchenSettingsModel.COMPANY_YEAR
+                                                                            + "&posno=" + KitchenSettingsModel.POS_NO + "&orderno=" + filteredOrders.get(i).get(0).getOrderNumber()
+                                                                            + "&SCREENNO=" + KitchenSettingsModel.SCREEN_NO + "&cashno=" + filteredOrders.get(i).get(0).getCashNumber();
 
-                                                            Log.e("clean kitchen", "" + domain);
+                                                                    Log.e("clean kitchen", "" + domain);
 
-                                                            presenter.updateOrdersRequest(domain);
-                                                        }
-                                                    }
+                                                                    presenter.updateOrdersRequest(domain);
+                                                                }
+                                                            }
 
-                                                    filteredOrders.clear();
-                                                    ordersList.clear();
-                                                    orderNo.clear();
-                                                    socketOrders.clear();
-                                                    socketOrderList.clear();
-                                                    cloudOrderList.clear();
+                                                            filteredOrders.clear();
+                                                            ordersList.clear();
+                                                            orderNo.clear();
+                                                            socketOrders.clear();
+                                                            socketOrderList.clear();
+                                                            cloudOrderList.clear();
 //                                                    deletedOrders.clear();
-                                                    textChecker.setText("3");
-                                                    Toast.makeText(MainActivity.this, "Cleaned successfully", Toast.LENGTH_SHORT).show();
+                                                            textChecker.setText("3");
+                                                            Toast.makeText(MainActivity.this, "Cleaned successfully", Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    });
+
+                                            builder.setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.dismiss();
                                                 }
                                             });
 
-                                    builder.setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.dismiss();
+                                            builder.show();
                                         }
                                     });
 
-                                    builder.show();
+                                    dialog.show();
+
+                                } else {
+                                    Toast.makeText(MainActivity.this, "Not authorized!", Toast.LENGTH_SHORT).show();
                                 }
-                            });
 
-                            dialog.show();
-
-                        } else {
-                            Toast.makeText(MainActivity.this, "Not authorized!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Enter Admin Password", Toast.LENGTH_SHORT).show();
+                            }
                         }
+                    });
+                    passwordDialog.show();
 
-                    } else {
-                        Toast.makeText(MainActivity.this, "Enter Admin Password", Toast.LENGTH_SHORT).show();
-                    }
                 }
-            });
-            passwordDialog.show();
+                break;
+            case R.id.main_language_arabic:
+                LocaleAppUtils.setLocale(new Locale("ar"));
+                LocaleAppUtils.setConfigChange(this);
+                setAppLanguage("ar");
+                finish();
+                startActivity(getIntent());
+                break;
+            case R.id.main_language_english:
+                LocaleAppUtils.setLocale(new Locale("en"));
+                LocaleAppUtils.setConfigChange(this);
+                setAppLanguage("en");
+                finish();
+                startActivity(getIntent());
+                break;
 
         }
+    }
+
+    public void setAppLanguage(String language) {
+        KitchenSettingsModel.LANGUAGE = language;
+        SharedPreferences.Editor editor = getSharedPreferences(LANGUAGE_SHARED_PREF, MODE_PRIVATE).edit();
+        editor.putString("lang", language);
+        editor.apply();
     }
 
     public void showLoading() {
@@ -1027,7 +1300,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         this.runOnUiThread(new Runnable() {
             public void run() {
                 if (!MainActivity.this.isFinishing()) {
-                    progressDialog.show();
+//                    progressDialog.show();
                 }
 
             }
