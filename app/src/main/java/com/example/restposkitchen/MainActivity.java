@@ -761,6 +761,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                     JSONObject orderObject = jsonArray.getJSONObject(m);
                     String name = orderObject.getString("ITEMNAME");
                     String qty = String.valueOf(orderObject.getInt("QTY"));
+                    String note = "";
 //                    while (name.length() < 40) {
 //                        name += " ";
 //                    }
@@ -775,6 +776,10 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
 //                    nameTextView.setText(orderObject.getString("NOTE") + qty + name);
 //                    itemRow.addView(nameTextView);
 //                    tableContainer.addView(itemRow);
+                    if (orderObject.getString("ISUPDATE").equals("1"))
+                        note = "تعديل";
+                    else
+                        note = "";
 
                     TableRow itemRow = new TableRow(MainActivity.this);
                     TableRow.LayoutParams layoutParams = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT
@@ -785,7 +790,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                             , 50, 1.0f);
 
                     TextView noteTextView = new TextView(MainActivity.this);
-                    noteTextView.setText(orderObject.getString("NOTE"));
+                    noteTextView.setText(note);//orderObject.getString("NOTE"));
                     noteTextView.setGravity(Gravity.CENTER);
                     noteTextView.setTextSize(18);
                     noteTextView.setLayoutParams(viewsLayoutParams);
@@ -840,7 +845,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                     } else if (KitchenSettingsModel.FLAG == 2) { // print
                         if (KitchenSettingsModel.LANGUAGE.equals("en")) {
 //                            Toast.makeText(MainActivity.this, "Current language is English", Toast.LENGTH_SHORT).show();
-                            String orderType, tableNo, sectionNo;
+                            String orderType, tableNo, sectionNo, note;
                             if (jsonArray.getJSONObject(0).getInt("ORDERTYPE") == 0) {
                                 orderType = "Take Away";
                                 tableNo = "-";
@@ -863,6 +868,10 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                 JSONObject orderObject = jsonArray.getJSONObject(m);
                                 String name = orderObject.getString("ITEMNAME");
                                 String qty = String.valueOf(orderObject.getInt("QTY"));
+                                if (orderObject.getString("ISUPDATE").equals("1"))
+                                    note = "Updated";
+                                else
+                                    note = "";
                                 while (name.length() < 20) {
                                     name += " ";
                                 }
@@ -871,12 +880,14 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                                 }
                                 orderString += name
                                         + qty
-                                        + orderObject.getString("NOTE")
+                                        + note
                                         + "\n";
                             }
-
+//                            orderObject.getString("NOTE")
                             orderString += "\n\n\n";
                             output.println(orderString);
+                            output.flush();
+                            output.println(new char[]{0x1D, 0x56, 0x41, 0x10});
                             output.flush();
                         } else if (KitchenSettingsModel.LANGUAGE.equals("ar")) {
 //
@@ -893,6 +904,8 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
                             byte[] bitmapdata = printPic.printDraw();
                             out.write(bitmapdata);
                             out.flush();
+                            output.println(new char[]{0x1D, 0x56, 0x41, 0x10});
+                            output.flush();
 
                         } else
                             Toast.makeText(MainActivity.this, "Can't determine language!", Toast.LENGTH_SHORT).show();
@@ -916,71 +929,9 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         thread.start();
     }
 
-    public void printArabic(String text) {
-//        String text = "اهلا وسهلا";
-        // create a text paint
-        TextPaint tp = new TextPaint();
-        tp.setTextSize(40);
-        tp.setFakeBoldText(true);
-        int width = (int) tp.measureText(text) + 10;
-        int height = (int) tp.measureText(text);
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        canvas.drawText(text, 0, height / 2, tp);
-        PrintPic printPic = PrintPic.getInstance();
-        printPic.init(bitmap);
-        byte[] bitmapdata = printPic.printDraw();
-        try {
-            out.write(bitmapdata);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        out.flush();
-    }
-
-//    public void startPainting(Bitmap bitmap, String text){
-//        Canvas canvas = new Canvas(bitmap);
-//        canvas.drawText(text, 0, height / 2, tp);
-//        PrintPic printPic = PrintPic.getInstance();
-//        printPic.init(bitmap);
-//        byte[] bitmapdata = printPic.printDraw();
-//        out.write(bitmapdata);
-//        out.flush();
-//    }
-//
-//    public List<Bitmap> convertToImage(List<String> arabicList) {
-//        bitmapList = new ArrayList<>();
-//
-//        for (int i = 0; i < arabicList.size(); i++) {
-//            String text = arabicList.get(i);
-//            // create a text paint
-//            TextPaint tp = new TextPaint();
-//            tp.setTextSize(40);
-//            tp.setFakeBoldText(true);
-//            int width = (int) tp.measureText(text) + 10;
-//            int height = (int) tp.measureText(text);
-//            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-//            bitmapList.add(bitmap);
-//        }
-//        return bitmapList;
-//    }
-
-    public Bitmap StringToBitMap(String encodedString) {
-        try {
-            Log.e("bitmap", "bitmap");
-            byte[] encodeByte = Base64.decode(encodedString, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
-            return bitmap;
-        } catch (Exception e) {
-            e.getMessage();
-            return null;
-        }
-    }
-
     public void startServerSocket() {
         Thread thread = new Thread(new Runnable() {
             private String stringData = null;
-
             //            private JSONObject jsonObject = new JSONObject();
             @Override
             public void run() {
@@ -1300,7 +1251,7 @@ public class MainActivity extends AppCompatActivity implements View.OnDragListen
         this.runOnUiThread(new Runnable() {
             public void run() {
                 if (!MainActivity.this.isFinishing()) {
-//                    progressDialog.show();
+                    progressDialog.show();
                 }
 
             }

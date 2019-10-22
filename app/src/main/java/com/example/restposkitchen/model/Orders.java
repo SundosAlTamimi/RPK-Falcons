@@ -14,7 +14,7 @@ public class Orders {
     private String kitchenNumber;
     private int tableNumber;
     private String section;
-    private String isUpdated;
+    private String isUpdated;// 1 => new update // 0 => no update
     private String note; //
     private String done;
     private String screenNo;
